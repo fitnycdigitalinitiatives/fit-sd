@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var array $idps
+ * @var string $heading
+ * @var string $selector
+ * @var bool $internal
+ * @var string $redirect_url
+ *
+ * And options passed to the helper.
+ */
+
+$plugins = $this->getHelperPluginManager();
+$url = $plugins->get('url');
+$escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+$escapeAttr = $plugins->get('escapeHtmlAttr');
+$currentSite = $plugins->get('currentSite');
+$site = $currentSite();
+
+
+$options = ['force_canonical' => true];
+if ($redirect_url) {
+    $options['query'] =  ['redirect_url' => $redirect_url];
+}
+?>
+
+
+
+<?php if ($idps): ?>
+
+    <?php foreach ($idps as $idpSlug => $idp):
+        $urlLogin = $idp['url'] ?? $url('sso', ['action' => 'login', 'idp' => $idpSlug], $options, true);
+        $idpName = $idp['idp_entity_name'] ?: $idp['idp_entity_id'];
+    ?>
+        <a class="single-sign-on-idp btn btn-fit-green rounded-0 border-2 border-black <?= $escapeAttr(str_replace(['.', ':'], '-', $idpSlug)) ?>" href="<?= $escapeAttr($urlLogin) ?>"><?= $escape($idpName) ?></a>
+        <?php break; ?>
+    <?php endforeach; ?>
+
+<?php else: ?>
+
+    <p><?= $translate('Login is not currently available.') ?></p>
+
+<?php endif; ?>

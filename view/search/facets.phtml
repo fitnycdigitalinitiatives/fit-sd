@@ -1,0 +1,221 @@
+<?php
+/*
+ * Copyright BibLibre, 2016
+ *
+ * This software is governed by the CeCILL license under French law and abiding
+ * by the rules of distribution of free software.  You can use, modify and/ or
+ * redistribute the software under the terms of the CeCILL license as circulated
+ * by CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+ *
+ * As a counterpart to the access to the source code and rights to copy, modify
+ * and redistribute granted by the license, users are provided only with a
+ * limited warranty and the software's author, the holder of the economic
+ * rights, and the successive licensors have only limited liability.
+ *
+ * In this respect, the user's attention is drawn to the risks associated with
+ * loading, using, modifying and/or developing or reproducing the software by
+ * the user in light of its specific status of free software, that may mean that
+ * it is complicated to manipulate, and that also therefore means that it is
+ * reserved for developers and experienced professionals having in-depth
+ * computer knowledge. Users are therefore encouraged to load and test the
+ * software's suitability as regards their requirements in conditions enabling
+ * the security of their systems and/or data to be ensured and, more generally,
+ * to use and operate it in the same conditions as regards security.
+ *
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL license and that you accept its terms.
+ */
+$this->headScript()->appendFile($this->assetUrl('js/dateRange.js'));
+$this->headScript()->appendFile($this->assetUrl('js/facet.js'));
+?>
+
+<?php
+if (!empty($facets)):
+  $sortOptions = ['count' => 'Count', 'index' => 'A to Z'];
+  $current_tab = 1;
+  $current_content = 1;
+  $facet_keys = $keys = array_keys($facets);
+  $hidden = false;
+  $hasDate = false;
+  $currentMin = 0;
+  $currentMax = 0;
+  $totalMin = 0;
+  $totalMax = 0;
+  if ((!empty($dateFacetStats)) && (!empty($dateFacetStats["min"])) && (!empty($dateFacetStats["max"]))) {
+    if (isset($queryParams['date_range_start']) && ($queryParams['date_range_start'][0]) && ($queryParams['date_range_start'][0] > $dateFacetStats["min"])) {
+      $currentMin = $queryParams['date_range_start'][0];
+    } else {
+      $currentMin = $dateFacetStats["min"];
+    }
+    if (isset($queryParams['date_range_end']) && ($queryParams['date_range_end'][0]) && ($queryParams['date_range_end'][0] < $dateFacetStats["max"])) {
+      $currentMax = $queryParams['date_range_end'][0];
+    } else {
+      $currentMax = $dateFacetStats["max"];
+    }
+    if (!empty($dateFacetStats["totalMin"])) {
+      $totalMin = $dateFacetStats["totalMin"];
+    } else {
+      $totalMin = $currentMin;
+    }
+    if (!empty($dateFacetStats["totalMax"])) {
+      $totalMax = $dateFacetStats["totalMax"];
+    } else {
+      $totalMax = $currentMin;
+    }
+  }
+  if (!(($currentMin == $totalMin) && ($currentMax == $totalMax) && ($currentMin == $currentMax))) {
+    $hasDate = true;
+    if ($dateFacetStatsPlacement && in_array($dateFacetStatsPlacement, $facet_keys)) {
+      $position = array_search($dateFacetStatsPlacement, $facet_keys);
+      array_splice($facet_keys, $position + 1, 0, "date_range_facet");
+    } else {
+      array_unshift($facet_keys, "date_range_facet");
+    }
+  }
+?>
+  <div id="facetRow" class="row mx-0">
+    <div id="facetSidebar" class="col-12 col-md-auto px-0">
+      <ul class="list-group list-group-flush" id="facets-tab" role="tablist">
+        <?php foreach ($facet_keys as $name): ?>
+          <?php if ($name != "date_range_facet"): ?>
+            <?php
+            $facetValues = $facets[$name];
+            ?>
+            <?php if ($facetValues): ?>
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?php echo ($current_tab == 1) ? "active" : ""; ?>" id="<?php echo $name; ?>-list" data-bs-toggle="list" href="#<?php echo $name; ?>" role="tab" aria-controls="<?php echo $name; ?>">
+                <?php echo $this->facetLabel($name); ?>
+              </a>
+              <?php $current_tab += 1; ?>
+            <?php else: ?>
+              <?php $hidden = true; ?>
+            <?php endif; ?>
+          <?php else: ?>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?php echo ($current_tab == 1) ? "active" : ""; ?>" id="date-list" data-bs-toggle="list" href="#date" role="tab" aria-controls="date">
+              Date
+            </a>
+            <?php $current_tab += 1; ?>
+          <?php endif; ?>
+        <?php endforeach; ?>
+        <?php if ($hidden): ?>
+          <li id='hidden-facets' class="d-none d-md-block list-group-item">*Additional filter categories are unavailable for these search results</li>
+        <?php endif; ?>
+      </ul>
+    </div>
+
+    <div id="facetContent" class="tab-content col p-3 p-xxl-5" id="nav-tabContent">
+      <?php foreach ($facet_keys as $name): ?>
+        <?php if ($name != "date_range_facet"): ?>
+          <?php
+          $facetValues = $facets[$name];
+          $per_page = isset($facetPagination[$name]["per_page"]) ? $facetPagination[$name]["per_page"] : "";
+          $total = isset($facetPagination[$name]["total"]) ? $facetPagination[$name]["total"] : "";
+          $current_page = isset($facetPagination[$name]["current_page"]) ? $facetPagination[$name]["current_page"] : "";
+          $sort = isset($facetPagination[$name]["sort"]) ? $facetPagination[$name]["sort"] : "";
+          ?>
+          <?php if ($facetValues): ?>
+            <div class="tab-pane fade show facet-pane <?php echo ($current_content == 1) ? "active" : ""; ?>" id="<?php echo $name; ?>" role="tabpanel" aria-labelledby="<?php echo $name; ?>-list" data-facet-name="<?php echo $name; ?>" data-per-page="<?php echo $per_page; ?>" data-total="<?php echo $total; ?>" data-current-page="<?php echo $current_page; ?>" data-sort="<?php echo $sort; ?>">
+              <?php if (($name != "fitcore_colorpalette") && ($name != "fitcore_predominantcolor") && (count($facetValues) > 5)): ?>
+                <div class="row justify-content-end mb-2">
+                  <div class="col-auto">
+                    <div class="dropdown d-inline-block facet-sort-dropdown">
+                      <button class="btn btn-outline-dark rounded-0 border-2 text-nowrap btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Sort facets">
+                        <span class="facet-dropdown-text"><?php echo $sortOptions[$sort]; ?></span>
+                        <i class="fas fa-sort ms-1" aria-hidden="true"></i>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end rounded-0 border border-2 border-black facet-sort-dropdown-menu">
+                        <?php
+                        foreach ($sortOptions as $value => $sortOptionLabel):
+                        ?>
+                          <li>
+                            <button class="dropdown-item facet-sort <?php echo ($sort == $value) ? 'fw-bold disabled' : ''; ?>"
+                              data-sort="<?php echo $value; ?>">
+                              <?php echo $sortOptionLabel; ?>
+                            </button>
+                          </li>
+                        <?php endforeach; ?>
+                      </ul>
+                    </div>
+                  </div>
+
+                </div>
+              <?php endif; ?>
+              <ul class="list-group list-group-flush facet-list <?php echo count($facetValues) > 20 ? "column" : ""; ?>">
+                <?php foreach ($facetValues as $facetValue): ?>
+                  <?php
+                  if (!(($name == "item_set_dcterms_title") && (strtolower($facetValue['value']) == "special collections and fit archive"))) {
+                    echo $this->facetLink($name, $facetValue);
+                  }
+                  ?>
+                <?php endforeach; ?>
+              </ul>
+              <?php if (is_numeric($total) && is_numeric($per_page) && ($total > $per_page)):
+                $total_pages = ceil($total / $per_page);
+              ?>
+                <div class="row justify-content-center align-items-center facet-pagination mt-3">
+                  <div class="col-auto">
+                    <div class="input-group">
+                      <button class="btn btn-outline-dark rounded-0 facet-pagination-button" data-pagination-step="first" type="button" aria-label="First page" title="First page" <?php echo ($current_page == 1) ? 'disabled' : ''; ?>>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-skip-backward-fill" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M.5 3.5A.5.5 0 0 0 0 4v8a.5.5 0 0 0 1 0V8.753l6.267 3.636c.54.313 1.233-.066 1.233-.697v-2.94l6.267 3.636c.54.314 1.233-.065 1.233-.696V4.308c0-.63-.693-1.01-1.233-.696L8.5 7.248v-2.94c0-.63-.692-1.01-1.233-.696L1 7.248V4a.5.5 0 0 0-.5-.5" />
+                        </svg>
+                      </button>
+                      <button class="btn btn-outline-dark facet-pagination-button" data-pagination-step="previous" type="button" aria-label="Previous page" title="Previous page" <?php echo ($current_page == 1) ? 'disabled' : ''; ?>>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-caret-left-fill" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="m3.86 8.753 5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z" />
+                        </svg>
+                      </button>
+                      <span class="input-group-text border-dark bg-transparent">
+                        Page&nbsp;<span class="pagination-current-page"><?php echo $current_page; ?></span>&nbsp;of <?php echo $total_pages; ?>
+                      </span>
+                      <button class="btn btn-outline-dark facet-pagination-button" data-pagination-step="next" type="button" aria-label="Next page" title="Next page" <?php echo ($current_page == $total_pages) ? 'disabled' : ''; ?>>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-caret-right-fill" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z" />
+                        </svg>
+                      </button>
+                      <button class="btn btn-outline-dark rounded-0 facet-pagination-button" data-pagination-step="last" type="button" aria-label="Last page" title="Last page" <?php echo ($current_page == $total_pages) ? 'disabled' : ''; ?>>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-skip-forward-fill" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M15.5 3.5a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-1 0V8.753l-6.267 3.636c-.54.313-1.233-.066-1.233-.697v-2.94l-6.267 3.636C.693 12.703 0 12.324 0 11.693V4.308c0-.63.693-1.01 1.233-.696L7.5 7.248v-2.94c0-.63.693-1.01 1.233-.696L15 7.248V4a.5.5 0 0 1 .5-.5" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              <?php endif; ?>
+            </div>
+            <?php $current_content += 1; ?>
+          <?php endif; ?>
+        <?php else: ?>
+          <div class="tab-pane fade show <?php echo ($current_content == 1) ? "active" : ""; ?>" id="date" role="tabpanel" aria-labelledby="date-list">
+            <form id="dateRangeFacet" class="card-body p-3" method="get" action="<?php echo $this->dateRangeFacetURL(); ?>">
+              <div class="row justify-content-between mb-4">
+                <div class="col-auto">
+                  <label for="dateRangeMin" class="form-label">Min</label>
+                  <input type="number" class="form-control form-control-sm rounded-0" id="dateRangeMin" name="date_range_start[]"
+                    min="<?php echo $totalMin; ?>" max="<?php echo $totalMax; ?>">
+                </div>
+                <div class="col-auto">
+                  <label for="dateRangeMax" class="form-label">Max</label>
+                  <input type="number" class="form-control form-control-sm rounded-0" id="dateRangeMax" name="date_range_end[]"
+                    min="<?php echo $totalMin; ?>" max="<?php echo $totalMax; ?>">
+                </div>
+              </div>
+              <div class="row mb-4">
+                <div class="col px-4">
+                  <div id="date-facet-slider" data-currentmin="<?php echo $currentMin; ?>"
+                    data-totalmin="<?php echo $totalMin; ?>" data-currentmax="<?php echo $currentMax; ?>"
+                    data-totalmax="<?php echo $totalMax; ?>"></div>
+                </div>
+              </div>
+              <div class="row justify-content-end">
+                <div class="col-auto">
+                  <button type="submit" class="btn btn-dark rounded-0 btn-sm">Set Date Range</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <?php $current_content += 1; ?>
+        <?php endif; ?>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>

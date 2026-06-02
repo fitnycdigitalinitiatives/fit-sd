@@ -1,0 +1,399 @@
+<?php
+/*
+ * Copyright BibLibre, 2016
+ * Copyright Daniel Berthereau, 2017-2018
+ *
+ * This software is governed by the CeCILL license under French law and abiding
+ * by the rules of distribution of free software.  You can use, modify and/ or
+ * redistribute the software under the terms of the CeCILL license as circulated
+ * by CEA, CNRS and INRIA at the following URL "http://www.cecill.info".
+ *
+ * As a counterpart to the access to the source code and rights to copy, modify
+ * and redistribute granted by the license, users are provided only with a
+ * limited warranty and the software's author, the holder of the economic
+ * rights, and the successive licensors have only limited liability.
+ *
+ * In this respect, the user's attention is drawn to the risks associated with
+ * loading, using, modifying and/or developing or reproducing the software by
+ * the user in light of its specific status of free software, that may mean that
+ * it is complicated to manipulate, and that also therefore means that it is
+ * reserved for developers and experienced professionals having in-depth
+ * computer knowledge. Users are therefore encouraged to load and test the
+ * software's suitability as regards their requirements in conditions enabling
+ * the security of their systems and/or data to be ensured and, more generally,
+ * to use and operate it in the same conditions as regards security.
+ *
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL license and that you accept its terms.
+ */
+?>
+
+
+<?php
+$this->htmlElement('body')->appendAttribute('class', 'resource search');
+$escape = $this->plugin('escapeHtml');
+$translate = $this->plugin('translate');
+$filterLocale = (bool) $this->siteSetting('filter_locale_values');
+$lang = $this->lang();
+$api = $this->plugin('api');
+$this->headScript()
+  ->appendFile($this->assetUrl('js/search.js', 'Search'));
+// this is currently only set up to search items
+if (isset($response)):
+  $totalResults = $response->getResourceTotalResults('items');
+  $results = $response->getResults('items');
+  $itemSetShow = false;
+  $itemSet = null;
+  $promptLogin = false;
+  $queryParams = $this->params()->fromQuery();
+  if (array_key_exists('item_set_id', $queryParams) && $queryParams['item_set_id']) {
+    foreach ($queryParams['item_set_id'] as $item_set_id) {
+      if ($item_set_id) {
+        $itemSet = $api->read('item_sets', $item_set_id)->getContent();
+        if ($itemSet) {
+          if (array_key_exists($site->id(), $itemSet->sites())) {
+            $itemSetShow = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+  // Check for item sets facet by title 
+  if (array_key_exists('limit', $queryParams) && array_key_exists("item_set_dcterms_title", $queryParams['limit'])) {
+    foreach ($queryParams['limit']["item_set_dcterms_title"] as $item_set_dcterms_title) {
+      $itemSet = $this->api()->searchOne('item_sets', [
+        'property' => [
+          [
+            'property' => 'dcterms:title',
+            'type' => 'eq',
+            'text' => $item_set_dcterms_title,
+          ],
+        ],
+      ])->getContent();
+      if ($itemSet) {
+        if (array_key_exists($site->id(), $itemSet->sites())) {
+          $itemSetShow = true;
+          break;
+        }
+      }
+    }
+  }
+  if ($itemSetShow) {
+    $user = $this->identity();
+    $restricted = false;
+    foreach ($itemSet->value('dcterms:accessRights', ['all' => true, 'type' => 'literal']) as $accessRight) {
+      if (str_contains(strtolower($accessRight), strtolower("Restricted to members of the FIT Community"))) {
+        $restricted = true;
+        break;
+      }
+    }
+    if (!$user && $restricted) {
+      $promptLogin = true;
+      $this->inlineScript()->appendFile($this->assetUrl('js/login.js'));
+    }
+  }
+?>
+  <?php if ($promptLogin): ?>
+    <!-- Modal -->
+    <div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loginLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-0 border-2 border-black">
+          <button type="button" class="btn-close position-absolute top-0 end-0 p-4 z-1" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="modal-body px-4 pb-4 pt-5 p-md-5">
+            <div class="container-fluid p-0">
+              <div class="row">
+                <div class="col" id="login-head">
+                  <p class="text-center fs-3" id="loginLabel">
+                    Online access to this collection is restricted to members of the FIT Community.
+                  </p>
+                  <p class="text-center fs-3">Please log into your FIT Account to continue. </p>
+                  <p class="text-center fs-5 mb-0">
+                    If you have any questions about accessing this material, please contact us at <a href="mailto:fitlibsparc@fitnyc.edu">fitlibsparc@fitnyc.edu</a>.
+                  </p>
+                </div>
+              </div>
+              <div class="row justify-content-center my-4">
+                <div class="col-9 col-sm-7 col-lg-5">
+                  <div class="d-grid gap-2">
+                    <?php echo $this->ssoLoginLinks(['template' => 'common/sso-login-button'], $this->url(null, [], ['query' => $this->params()->fromQuery()], true)); ?>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <p id="loginRights">
+                    The FIT Gladys Marcus Library has made this collection available to the FIT Community strictly for research and educational purposes. Any usage of this material beyond what is permitted by copyright law must first be cleared with the appropriate rights-holder(s).
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    </div>
+  <?php endif; ?>
+
+  <?php if ($itemSetShow):
+    $collectionTitle = $itemSet->displayTitle();
+    $this->pageTitle($collectionTitle);
+    $findingAid = null;
+    foreach ($itemSet->value('dcterms:relation', ['all' => true, 'type' => 'uri']) as $value) {
+      if (str_contains(trim(strtolower($value->value())), "finding aid")) {
+        $findingAid = $value->uri();
+      }
+    }
+  ?>
+    <div id="collection-jumbotron" class="p-4 p-sm-5 mb-3 border-bottom border-top border-black border-2">
+      <div class="jumbotron-background-img-container">
+        <?php echo $this->thumbnail($itemSet, 'medium', ['class' => 'jumbotron-background-img', 'alt' => $collectionTitle]); ?>
+      </div>
+      <div id="collection-jumbotron-text" class="container p-4 p-sm-5 border border-black border-2">
+        <div class="row justify-content-center">
+          <div class="col-lg-11 col-xl-9 col-xxl-8">
+            <hgroup class="text-center">
+              <h1>
+                <?php echo $collectionTitle; ?>
+              </h1>
+              <?php if ($identifier = $itemSet->value('dcterms:identifier')): ?>
+                <p class="text-body-secondary h1 mb-4">
+                  <?php if ($identifier->type() == "uri"): ?>
+                    <?php echo $escape($identifier->uri()); ?>
+                  <?php else: ?>
+                    <?php echo $escape($identifier); ?>
+                  <?php endif; ?>
+                </p>
+              <?php endif; ?>
+            </hgroup>
+            <?php if ($itemSet->value('dcterms:description')): ?>
+              <p class="collection-description">
+                <?php echo explode("<br", $itemSet->value('dcterms:description')->asHtml())[0]; ?>
+              </p>
+            <?php endif; ?>
+            <?php if ($findingAid): ?>
+              <p class="fw-bold collection-disclaimer">The resources below are part of the Special Collections and FIT Archive and represent only those that have been digitized. For a more complete view of this collection, please access the Finding Aid below.</p>
+            <?php endif; ?>
+            <div class="col mt-4 text-center">
+              <?php if ($findingAid): ?>
+                <a class="btn btn-outline-dark rounded-0 border-2 mx-1 my-sm-0" href="<?php echo $findingAid; ?>" target="_blank">View Finding Aid</a>
+              <?php endif; ?>
+              <button type="button" class="btn btn-outline-dark rounded-0 border-2 mx-1 mt-3 mt-sm-0 my-sm-0" data-bs-toggle="modal" data-bs-target="#collectionSearchModal">Search this Collection</button>
+              <!-- Modal -->
+              <div class="modal fade text-start" id="collectionSearchModal" tabindex="-1" aria-labelledby="collectionSearchModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content rounded-0">
+                    <div class="modal-header">
+                      <h2 class="modal-title" id="collectionSearchModalLabel">
+                        Collection Search
+                      </h2>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" data-loaded="notloaded" data-collectionid="<?php echo $itemSet->id(); ?>" data-collectiontitle="<?php echo $collectionTitle; ?>">
+                      <div class="placeholder-glow">
+                        <a class="btn btn-secondary disabled placeholder col-12" aria-disabled="true"></a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <?php else: ?>
+    <?php $this->pageTitle($translate('Items')); ?>
+  <?php endif; ?>
+
+
+
+  <div id="grid-header" class="container-fluid py-3">
+    <?php $queryString = $this->QueryToStringHelper($queryParams, $this->params()->fromRoute(), $this->searchForm()); ?>
+    <div class="row">
+      <div class="col">
+        <div class="row" id="results">
+          <?php if ($itemSetShow): ?>
+            <h2 class="mb-0">Items</h2>
+          <?php else: ?>
+            <h1 class="h2 mb-0">Items</h1>
+          <?php endif; ?>
+          <p class="col-auto text-secondary fs-5 mb-0">
+            Showing
+            <?php echo number_format($totalResults); ?>
+            <?php echo ($totalResults == 1) ? ' result' : ' results'; ?>
+            <?php echo ($queryString) ? ' for' : ' total'; ?>
+          </p>
+        </div>
+        <?php if ($queryString): ?>
+          <div class="row mt-sm-2 mt-md-1">
+            <div class="col-auto">
+              <?php echo $queryString; ?>
+            </div>
+          </div>
+        <?php endif; ?>
+      </div>
+      <div class="col-12 col-sm-auto mt-3 mt-sm-0">
+        <?php if ($facets): ?>
+          <?php
+          $hasFacets = false;
+          foreach ($facets as $key => $value) {
+            if ($value) {
+              $hasFacets = true;
+              break;
+            }
+          }
+          if (!$hasFacets) {
+            if ($dateFacetStats && ($dateFacetStats["totalMax"] > $dateFacetStats["totalMin"])) {
+              $hasFacets = true;
+            }
+          }
+          ?>
+          <?php if ($hasFacets): ?>
+            <!-- filter  -->
+            <button id="filter-button" class="btn btn-outline-dark rounded-0 border-2 me-2" type="button"
+              data-bs-toggle="modal" data-bs-target="#searchFilters" aria-controls="searchFilters">
+              Filter
+              <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="bi bi-funnel-fill ms-1" viewBox="0 0 16 16">
+                <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5z" />
+              </svg>
+            </button>
+            <div class="modal fade" id="searchFilters" tabindex="-1" aria-labelledby="searchFiltersLabel" aria-hidden="true">
+              <div class="modal-dialog modal-fullscreen p-md-3 p-lg-5">
+                <div class="modal-content border border-2 border-dark">
+                  <div id="searchFiltersHeader">
+                    <div class="row">
+                      <div class="col">
+                        <h3 class="mb-0" id="searchFiltersLabel">
+                          <?php echo $translate('Search Filters'); ?>
+                        </h3>
+                      </div>
+                      <div class="col-auto">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                    </div>
+
+                    <?php if ($queryString): ?>
+                      <div class="row mt-3">
+                        <div class="col-auto">
+                          <?php echo $queryString; ?>
+                        </div>
+                      </div>
+                    <?php endif; ?>
+                  </div>
+                  <div class="modal-body">
+                    <?php echo $this->partial('search/facets', ['facets' => $facets, 'dateFacetStats' => $dateFacetStats, 'dateFacetStatsPlacement' => $dateFacetStatsPlacement, 'queryParams' => $queryParams, 'facetPagination' => $facetPagination]); ?>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
+        <?php endif; ?>
+        <?php if (($totalResults > 0) && (count($sortOptions) > 1)):
+          $currentSort = $query->getSort();
+        ?>
+          <div class="dropdown d-inline-block">
+            <button class="btn btn-outline-dark rounded-0 border-2 text-nowrap" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Sort results">
+              <?php echo $sortOptions[$currentSort]; ?>
+              <i class="fas fa-sort ms-1" aria-hidden="true"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end rounded-0 border border-2 border-black" id="sort-dropdown">
+              <?php
+              $currentSort = $query->getSort();
+              foreach ($sortOptions as $value => $sortOptionLabel):
+              ?>
+                <li>
+                  <button class="dropdown-item <?php echo ($currentSort == $value) ? 'fw-bold disabled' : ''; ?>"
+                    data-sort="<?php echo $value; ?>">
+                    <?php echo $sortOptionLabel; ?>
+                  </button>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+  <?php $this->trigger('view.browse.before'); ?>
+  <div id="grid" class="container-fluid mb-5">
+    <?php if ($totalResults > 0): ?>
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 align-items-center" id="grid-row">
+        <?php
+        foreach ($results as $result):
+          // Need to make sure the item actually exists because it can show up in the index a few minutes after it's been deleted         
+          try {
+            $item = $api->read('items', $result['id'])->getContent();
+          } catch (Omeka\Api\Exception\NotFoundException $e) {
+            $item = null;
+          }
+
+        ?>
+          <?php
+          if ($item):
+            $title = $item->displayTitle();
+          ?>
+            <div class="col grid-item-container">
+              <div class="card border-0 grid-item bg-transparent">
+                <div class="card-img rounded-0">
+                  <?php echo $this->thumbnail($item, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white', 'alt' => $title]); ?>
+                </div>
+                <div class="card-body">
+                  <p class="grid-item-title">
+                    <?php echo $item->link($title, null, ['class' => 'text-dark text-decoration-none stretched-link', 'title' => $title]); ?>
+                  </p>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </div>
+      <?php $this->trigger('view.browse.after'); ?>
+      <div class="row justify-content-center pagination-row d-none">
+        <div class="col-auto">
+          <?php echo $this->pagination(); ?>
+        </div>
+      </div>
+    <?php else: ?>
+      <div class="row">
+        <div class="col px-sm-5">
+          <p class="lead">
+            <?php echo $translate('We\'re sorry, but your search did not return any results. Please try searching again, or browsing through the items or collections.'); ?>
+          </p>
+        </div>
+      </div>
+      <?php $this->trigger('view.browse.after'); ?>
+    <?php endif; ?>
+  </div>
+<?php else: ?>
+  <div id="grid-header" class="container-fluid py-5">
+    <div class="row align-items-center mb-3 mb-sm-2 mb-md-1">
+      <div class="col-auto">
+        <div class="page-title">
+          <?php echo $this->pageTitle($translate('Items'), 1); ?>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-3 mt-sm-2 mt-md-1">
+      <div class="col-auto">
+        <?php echo $this->QueryToStringHelper($queryParams, $this->params()->fromRoute(), $this->searchForm()); ?>
+      </div>
+    </div>
+  </div>
+  <div id="grid" class="container-fluid mb-5">
+    <div class="row">
+      <div class="col px-sm-5">
+        <p class="lead">
+          We're sorry, but there was an error during your search. Please try searching again, or browsing through the
+          items or collections. Please contact us at <a
+            href="mailto:repository@fitnyc.edu">repository@fitnyc.edu</a> if you continue to run into trouble.
+        </p>
+        <p>
+          <?php echo $this->messages(); ?>
+        </p>
+      </div>
+    </div>
+  </div>
+
+<?php endif; ?>

@@ -1,0 +1,43 @@
+<?php
+$translate = $this->plugin('translate');
+?>
+
+
+<div class="container pt-md-2 pb-3">
+    <div class="row">
+        <div class="container" id="error-container">
+            <div class="row">
+                <div class="col-12" id="error">
+                    <?php echo $this->pageTitle($translate('404 Error'), 2); ?>
+                    <p class="lead">
+                        Unfortunately, the page you are trying to view could not be found. We recently migrated Archive
+                        on Demand to a new system so some things may have gotten lost in the transition. Legacy URL's
+                        from the previous site may not properly redirect. If you were looking for a specific video
+                        please try search for it using the search icon in the menu above. Please contact us directly at
+                        <a href="mailto:archiveondemand@fitnyc.edu">archiveondemand@fitnyc.edu</a> if you are still
+                        having trouble finding what you're looking for.
+                    </p>
+
+                    <?php if (ini_get('display_errors')): ?>
+                        <?php if (isset($this->message)): ?>
+                            <p>
+                                <?php echo $this->message; ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <?php if (isset($this->reason)): ?>
+                            <p>
+                                <?php echo sprintf($translate('Reason: %s'), "<tt>$this->reason</tt>"); ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <?php if ($this->exception): ?>
+                            <h3>Stack Trace</h3>
+                            <pre><?php echo $this->exception; ?></pre>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

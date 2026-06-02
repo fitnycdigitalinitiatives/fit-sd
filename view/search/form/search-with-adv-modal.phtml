@@ -1,0 +1,279 @@
+<?php
+$translate = $this->plugin('translate');
+$availableFields = $this->searchForm()->getAvailableSearchFields();
+$availableFieldsOptions = array_map(function ($field) {
+    return [
+        'value' => $field['name'],
+        'label' => $field['label'],
+        'attributes' => [
+            'data-valid-operators' => implode(' ', $field['valid_operators'] ?? []),
+        ],
+    ];
+}, $availableFields);
+$availableOperators = $this->searchForm()->getAvailableOperators();
+$availableOperatorsOptions = array_column($availableOperators, 'display_name', 'name');
+$settings = $form->getOption('search_page')->settings();
+$query = $this->params()->fromQuery();
+$controller = $this->params()->fromRoute()["__CONTROLLER__"];
+if (!$query) {
+    $query = [];
+}
+if (array_key_exists('suggester', $query) && ($query['suggester'] == 'true')) {
+    if (array_key_exists('q', $query)) {
+        $query['q'] = stripslashes($query['q']);
+        if ((substr($query['q'], 0, 1) == '"') && (substr($query['q'], -1, 1) == '"')) {
+            $query['q'] = substr(substr($query['q'], 1), 0, -1);
+        }
+    }
+}
+
+
+$form->prepare();
+$form->setData($query);
+$form->setAttribute('id', 'search-form-standard');
+$formQueryInput = $form->get('q');
+$formQueryInput->setAttributes(['class' => 'form-control', 'id' => 'main-search-input', 'type' => 'search', 'aria-label' => $translate('Search'), 'autocomplete' => 'off']);
+$suggesterURL = $form->getOption('search_page')->url() . '/suggester.json';
+$this->inlineScript()->setAllowArbitraryAttributes(true);
+$this->inlineScript()->appendFile('https://cdn.jsdelivr.net/npm/corejs-typeahead@1.3.1/dist/typeahead.bundle.min.js', 'text/javascript', ['integrity' => 'sha256-xZuy7z/QR1H5FKCYUbRDj4yvcyMEyVIg4iQUhs8MI+w=', 'crossorigin' => 'anonymous']);
+$this->inlineScript()->appendFile($this->assetUrl('js/search.js'), 'text/javascript', ['data-url' => $suggesterURL, 'id' => 'suggesterscript']);
+?>
+<!-- Basic Search -->
+<?php echo $this->form()->openTag($form); ?>
+<div class="input-group">
+    <?php echo $this->formInput($formQueryInput); ?>
+    <button class="btn btn-dark rounded-0" type="submit" aria-label="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+        </svg>
+    </button>
+</div>
+<div class="search-info d-flex mt-2 small justify-content-end w-100">
+    <div class="form-check me-2 mb-0 fw-normal">
+        <input class="form-check-input border-1 border-secondary-subtle" type="checkbox" value="" name="full-text" id="full-text" <?php echo ($controller == "OcrSearch" ? "checked" : ""); ?>>
+        <label class="form-check-label" for="full-text">
+            Full-Text Search
+            <svg id="full-text-info" xmlns="http://www.w3.org/2000/svg" aria-label="Info" class="bi bi-info-circle-fill align-top" viewBox="0 0 16 16" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Full-text searches are limited to only those items that contain text and have been indexed. Results may be limited.">
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
+            </svg>
+        </label>
+        <?php if ($controller == "OcrSearch" && isset($query['item_set_id'])): ?>
+            <input type="hidden" name="item_set_id" value="<?php echo $query['item_set_id']; ?>">
+        <?php endif; ?>
+    </div>
+    |
+    <button class="border-0 bg-transparent p-0 link-dark ms-2 text-nowrap" id="adv-modal-trigger" data-bs-toggle="modal" data-bs-target="#advancedSearchModal" type="button">
+        Advanced Search
+        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" class="bi bi-search ms-1" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+        </svg>
+    </button>
+</div>
+<?php echo $this->form()->closeTag(); ?>
+
+<!-- Advanced Search -->
+<?php $form->setAttribute('id', 'search-form-advanced'); ?>
+
+<!-- Modal -->
+<div class="modal fade" id="advancedSearchModal" tabindex="-1" aria-labelledby="advancedSearchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-0">
+            <div class="modal-header">
+                <h2 class="modal-title" id="advancedSearchModalLabel">
+                    <?php echo $translate('Advanced Search'); ?>
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <?php echo $this->form()->openTag($form); ?>
+
+                <div class="field mb-3">
+                    <div class="field-meta">
+                        <label class="form-label" for="metadata_search">
+                            <?php echo $this->translate('Search all metadata'); ?>
+                        </label>
+                    </div>
+                    <div class="inputs">
+                        <?php if ($controller != "OcrSearch"): ?>
+                            <?php echo $this->formInput($formQueryInput->setAttributes(['class' => 'form-control', 'type' => 'search', 'placeholder' => '', 'id' => 'metadata_search'])); ?>
+                        <?php else: ?>
+                            <input type="search" name="q" placeholder="" class="form-control" id="metadata_search" aria-label="Search" autocomplete="off" value="">
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php if (!empty($settings['form']['search_fields'])): ?>
+                    <div id="property-queries" class="field removable multi-value mb-3" role="group" aria-labelledby="by-value-label">
+                        <div class="field-meta form-label">
+                            <span id="by-value-label" class="label">
+                                <?php echo $translate('Search by specific fields'); ?>
+                            </span>
+                            <button type="button" class="search-add-filter o-icon-add button border-0 bg-transparent"
+                                aria-label="<?php echo $translate('Add new value'); ?>">
+                                <i class="fas fa-plus" title="<?php echo $translate('Add new value'); ?>" aria-hidden="true">
+                                </i>
+                            </button>
+                        </div>
+                        <div class="inputs">
+                            <?php echo $this->partial('search/form/standard-match-group', [
+                                'availableFieldsOptions' => $availableFieldsOptions,
+                                'availableOperatorsOptions' => $availableOperatorsOptions,
+                                'data' => $query['filters'] ?? [],
+                                'namePrefix' => 'filters',
+                                'mainGroup' => true,
+                            ]); ?>
+                        </div>
+                    </div>
+
+                    <template id="template-search-filter">
+                        <div class="search-form-standard-match-group-item mb-0">
+                            <?php echo $this->partial('search/form/standard-match-group-filter', [
+                                'availableFieldsOptions' => $availableFieldsOptions,
+                                'availableOperatorsOptions' => $availableOperatorsOptions,
+                                'query' => [],
+                                'namePrefix' => '__placeholder__',
+                            ]); ?>
+                        </div>
+                    </template>
+
+                    <script>
+                        $(document).ready(function() {
+                            $('#search-form-advanced').on('click', '.search-add-filter', function(ev) {
+                                ev.preventDefault();
+                                insertFilterAfter(this);
+                                renameAllFormControls();
+                            });
+
+                            $('#search-form-advanced').on('click', '.search-delete-filter', function(ev) {
+                                ev.preventDefault();
+                                $(this).closest('.search-form-standard-match-group-item').remove();
+                                renameAllFormControls();
+                            });
+
+                            // Disable operators that are not valid to use with the selected field
+                            $('#search-form-advanced').on('change', '.search-form-standard-filter-field', function() {
+                                const validOperators = $(this).find('option:selected').attr('data-valid-operators').split(' ');
+                                const options = $(this).closest('.search-form-standard-match-group-item').find('.search-form-standard-filter-operator').find('option');
+                                options.attr('disabled', false);
+                                options.each(function() {
+                                    const option = $(this);
+                                    if (!validOperators.includes(option.val())) {
+                                        option.attr('disabled', true);
+                                        option.prop('selected', false);
+                                    }
+                                })
+                            });
+                            $('#search-form-advanced .search-form-standard-filter-field').trigger('change');
+                            $('#reset-form').on("click", function() {
+                                $('#search-form-advanced').find('input[type=search], input[type=number], input:text').val('');
+                                $('#search-form-advanced').find('select').prop("selectedIndex", 0);
+                                $('#collection-select').val(null).trigger('change');
+                            });
+
+                            function insertFilterAfter(element) {
+                                const fieldContainer = $(element).parents('.field');
+                                const template = document.getElementById('template-search-filter');
+                                const newValue = $(template.content.cloneNode(true).firstElementChild);
+                                newValue.appendTo(fieldContainer.find('.search-form-standard-match-group-items'));
+                                newValue.trigger('o:value-created');
+                            }
+
+                            function renameFormControls(element, namePrefix) {
+                                $(element).children('select').attr('name', namePrefix + '[match]');
+
+                                const items = $(element)
+                                    .children('.search-form-standard-match-group-items')
+                                    .children('.search-form-standard-match-group-item');
+
+                                for (let i = 0; i < items.length; i++) {
+                                    const item = items.get(i);
+                                    $(item).find('input,select').each(function() {
+                                        const match = $(this).attr('name').match(/\[([^[]+)\]$/);
+                                        if (match) {
+                                            $(this).attr('name', namePrefix + '[queries][' + i + '][' + match[1] + ']');
+                                        }
+                                    });
+                                    $(item).children('.search-form-standard-match-group').each(function() {
+                                        renameFormControls(this, namePrefix + '[queries][' + i + ']');
+                                    });
+                                }
+                            }
+
+                            function renameAllFormControls() {
+                                const mainGroup = document.querySelector('#search-form-advanced > .field > .inputs > .search-form-standard-match-group');
+                                renameFormControls(mainGroup, 'filters');
+                            }
+                        });
+                    </script>
+                <?php endif; ?>
+
+                <?php if (!empty($settings['form']['date_range_field'])): ?>
+                    <?php echo $this->partial('search/form/date-range', ['query' => $query]); ?>
+                <?php endif; ?>
+
+                <?php if (!empty($settings['form']['item_sets_field'])): ?>
+                    <?php echo $this->partial('common/advanced-search/item-sets-solr', ['query' => $query]); ?>
+                <?php endif; ?>
+
+                <?php if (!empty($settings['form']['resource_class_field'])): ?>
+                    <?php echo $this->partial('common/advanced-search/resource-class-solr', ['query' => $query]); ?>
+                    <script type="text/javascript">
+                        $(document).ready(function() {
+                            $('#resource-class select optgroup:not([label="Dublin Core Type"])').remove();
+                            $('#resource-class select option[data-term="dctype:Image"]').remove();
+                        });
+                    </script>
+                <?php endif; ?>
+
+                <div id="page-actions">
+                    <button type="submit" name="submit" class="btn btn-dark rounded-0 mt-2"
+                        value="<?php echo $this->escapeHtml($translate('Search')); ?>">
+                        <?php echo $this->escapeHtml($translate('Search')); ?>
+                    </button>
+                    <button type="button" id="reset-form" name="reset" class="btn btn-dark rounded-0 mt-2"
+                        value="<?php echo $this->escapeHtml($translate('Clear form')); ?>">
+                        <?php echo $this->escapeHtml($translate('Clear form')); ?>
+                    </button>
+                </div>
+                <?php echo $this->form()->closeTag(); ?>
+            </div>
+            <div class="modal-footer d-block">
+                <form action="/ocrsearch" method="GET" id="adv-full-text">
+                    <div class="field mb-3">
+                        <h3 class="mb-3">
+                            Full-Text Search
+                        </h3>
+                        <div class="input-group value mb-2">
+                            <input type="search" name="q" placeholder="Full-Text Search" class="form-control" id="adv-full-text-input" aria-label="Full-Text Search" autocomplete="off" value="<?php echo (($controller == "OcrSearch" && isset($query['q'])) ? $query['q'] : ""); ?>"> <button class="btn btn-dark rounded-0" type="submit" aria-label="Submit Full-Text Search">
+                                <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="field-description form-text">
+                            Searches for keywords in the textual content of items. Results are limited to the collections that have been full-text indexed.
+                        </div>
+                    </div>
+                    <div id="item-sets-full-text" class="field mb-3" role="group">
+                        <div class="field-meta form-label">
+                            <span id="by-item-set-full-text-label" class="label">
+                                <?php echo $translate('Limit by collection'); ?>
+                            </span>
+                        </div>
+                        <div class="inputs">
+                            <div class="value input-group mb-2">
+                                <select id="item_set_id_full_text_select" name="item_set_id" class="form-select" aria-labelledby="by-item-set-full-text-label" data-loaded="notloaded" data-currentitemset="<?php echo (($controller == "OcrSearch" && isset($query['item_set_id'])) ? $query['item_set_id'] : ""); ?>">
+                                    <option value="">Select Collection...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field-description form-text">
+                            <?php echo $translate('Searches for resources that are assigned to any of these collections.'); ?>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,59 @@
+<?php
+$escape = $this->plugin('escapeHtml');
+$api = $this->plugin('api');
+?>
+
+<?php if ($attachments): ?>
+    <div id="collectionCarousel" class="carousel slide carousel-fade border-bottom border-black border-2 mb-4 mb-lg-5">
+        <div class="carousel-indicators">
+            <?php for ($i = 1; $i <= count($attachments); $i++) : ?>
+                <button type="button" data-bs-target="#collectionCarousel" data-bs-slide-to="<?php echo ($i - 1); ?>" class="<?php echo ($i == 1) ? 'active' : ''; ?>" aria-current="<?php echo ($i == 1) ? 'true' : 'false'; ?>" aria-label="Slide <?php echo $i; ?>"></button>
+            <?php endfor; ?>
+        </div>
+        <div class="carousel-inner">
+            <?php foreach ($attachments as $key => $attachment): ?>
+                <?php if ($asset = $attachment['asset']): ?>
+                    <?php
+                    $assetURL = $asset->assetUrl();
+                    $item_set_id = $attachment['item_set_id'];
+                    $item_set = $api->read('item_sets', $item_set_id)->getContent();
+                    $slide_title = $attachment['slideTitle'] ? $attachment['slideTitle'] : $item_set->displayTitle();
+                    $assetAlt = $asset->altText() ? $asset->altText() : $slide_title;
+                    if ($this->getHelperPluginManager()->has('getSearchFormForSite')) {
+                        $item_set_url = $this->url('site/search', ['site-slug' => $siteSlug], ['query' => ['item_set_id' => [$item_set->id()]]]);
+                    } else {
+                        $item_set_url = $item_set->url();
+                    }
+                    $caption = $attachment['caption']
+                    ?>
+                    <div class="carousel-item <?php echo ($key === array_key_first($attachments)) ? 'active' : ''; ?>">
+                        <div class="ratio ratio-21x9">
+                            <?php if (str_ends_with($assetURL, '.mp4')): ?>
+                                <video autoplay="" loop="" muted="">
+                                    <source src="<?php echo $assetURL; ?>">
+                                </video>
+                            <?php else: ?>
+                                <img src="<?php echo $assetURL; ?>" alt="<?php echo $escape($assetAlt); ?>">
+                            <?php endif; ?>
+                        </div>
+                        <div class="carousel-caption text-end">
+                            <h2 class="display-3 text-truncate">
+                                <?php echo $escape($slide_title); ?>
+                            </h2>
+                            <p class="text-truncate h3 subtitle"><?php echo $escape($caption); ?></p>
+                            <a class="btn btn-outline-light rounded-0 border-2 mt-sm-3" href="<?php echo $item_set_url; ?>">View Collection</a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#collectionCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#collectionCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+<?php endif; ?>

@@ -1,0 +1,402 @@
+<?php
+$this->headLink()->appendStylesheet('https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css');
+$this->headScript()->appendFile('https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js');
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$this->htmlElement('body')->appendAttribute('class', 'item resource show');
+$embedMedia = $this->siteSetting('item_media_embed', false);
+$itemMedia = $item->media();
+//remove captions files from itemMedia so it doesn't display
+foreach ($itemMedia as $key => $media) {
+  if ($media->mediaType() == "text/vtt") {
+    unset($itemMedia[$key]);
+  } elseif (strtolower($media->displayTitle()) == "release form") {
+    unset($itemMedia[$key]);
+  }
+}
+$this->headScript()->appendFile('https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js', 'text/javascript', ['defer' => 'defer']);
+
+$filterLocale = (bool) $this->siteSetting('filter_locale_values');
+$lang = $this->lang();
+?>
+
+<?php $this->trigger('view.show.before'); ?>
+<div id="show-container" class="container-fluid mt-3 mb-5">
+  <?php if ($embedMedia): ?>
+    <?php if ($itemMedia): ?>
+      <?php if ((count($itemMedia) > 1)): ?>
+        <div class="row justify-content-center media-wrapper">
+          <div class="col">
+            <div class="media-embeds">
+              <div class="tab-content" id="mediaTabContent">
+                <?php $panel_id = 1; ?>
+                <?php foreach ($itemMedia as $media): ?>
+                  <div class="tab-pane<?php echo ($panel_id == 1 ? ' show active' : ''); ?>" id="media-<?php echo $panel_id; ?>"
+                    role="tabpanel" aria-labelledby="media-<?php echo $panel_id; ?>-tab">
+                    <?php echo $media->render(); ?>
+                  </div>
+                <?php
+                  $panel_id++;
+                endforeach;
+                ?>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row justify-content-center mt-2" id="slider-row">
+          <div class="col">
+            <div class="row position-relative">
+              <div class="col-auto" id="media-slider-container">
+                <div class="splide position-static" role="tablist" aria-label="Media tabs">
+                  <div class="splide__track">
+                    <ul class="splide__list">
+                      <?php $tab_id = 1; ?>
+                      <?php foreach ($itemMedia as $media): ?>
+                        <li class="splide__slide border-0" id="media-<?php echo $tab_id; ?>-tab" data-target="#media-<?php echo $tab_id; ?>" data-slidenumber="<?php echo $tab_id; ?>" type="button"
+                          role="tab" aria-controls="media-<?php echo $tab_id; ?>"
+                          aria-selected="<?php echo ($tab_id == 1 ? 'true' : 'false'); ?>"
+                          title="<?php echo $media->displayTitle(); ?>" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="splide-tooltip">
+                          <?php echo $this->thumbnail($media, 'medium', ['class' => 'img-fluid', 'alt' => $media->displayTitle()]); ?>
+                        </li>
+                        <?php $tab_id++; ?>
+                      <?php endforeach; ?>
+                    </ul>
+                  </div>
+                  <div class="splide__arrows">
+                    <button class="slider-arrow splide__arrow--prev rounded-circle p-2 lh-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-caret-left-fill" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="m3.86 8.753 5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z" />
+                      </svg>
+                    </button>
+                    <div id="slide-indicator" class="lh-1 px-1">
+                      <span id="current-slide-indicator">1</span>
+                      <span>/</span>
+                      <span><?php echo ($tab_id - 1); ?></span>
+                    </div>
+                    <button class="slider-arrow splide__arrow--next rounded-circle p-2 lh-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-caret-right-fill" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <?php else: ?>
+        <div class="row justify-content-center media-wrapper">
+          <div class="col">
+            <div class="media-embeds">
+              <?php foreach ($itemMedia as $media): ?>
+                <?php echo $media->render(); ?>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </div>
+      <?php endif; ?>
+    <?php else: ?>
+      <div class="row justify-content-center">
+        <div class="col">
+          <div class="ratio ratio-16x9 border-2 border border-black bg-fit-grey">
+            <!-- Flexbox container for aligning the toasts -->
+            <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center w-100 h-100">
+
+              <!-- Then put toasts within -->
+              <div class="toast mx-1 bg-white rounded-0 border-2 border border-black" id="embargo" role="alert" aria-live="assertive" aria-atomic="true"
+                data-bs-autohide="false">
+                <div class="toast-header bg-secondary text-white rounded-0 border-bottom border-1 border-black">
+                  <strong class="me-auto">Item Not Available</strong>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+                </div>
+                <?php $mailSubject = 'Accessing "' . $item->displayTitle(null, ($filterLocale ? $lang : null)) . '" (' . $escape($item->url()) . ')'; ?>
+                <div class="toast-body">
+                  At the request of the author/creator, this work is not currently available for public access. If you would
+                  like more details about the access conditions for this item, or if you are a member of the FIT community
+                  seeking access to this item, please send us a message at <a
+                    href="mailto:repository@fitnyc.edu?subject=<?php echo urlencode($mailSubject); ?>"
+                    target="_blank">repository@fitnyc.edu</a>.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <?php endif; ?>
+  <?php endif; ?>
+  <div class="row mt-3 mb-4">
+    <div class="col" id="quick-details">
+      <?php echo $this->pageTitle($item->displayTitle(null, ($filterLocale ? $lang : null)), 1); ?>
+      <?php echo $this->SocialShare($item); ?>
+    </div>
+  </div>
+  <div class="row justify-content-between gx-lg-5 gx-xl-4" id="item-details">
+    <h2 class="my-3 my-lg-4">Item Details</h2>
+    <div class="col-lg-6" id="dc-metadata">
+      <?php echo $item->displayValues(); ?>
+      <?php if (!$embedMedia): ?>
+        <?php if ($itemMedia): ?>
+          <div class="media-list">
+            <h3 class="fw-light mb-2 h4">Files</h3>
+            <?php foreach ($itemMedia as $media): ?>
+              <?php echo $media->linkPretty(); ?>
+            <?php endforeach; ?>
+          </div>
+        <?php else: ?>
+          <h3 class="fw-light mb-2 h4">Files</h3>
+          <?php $mailSubject = 'Accessing "' . $item->displayTitle(null, ($filterLocale ? $lang : null)) . '" (' . $escape($item->url()) . ')'; ?>
+          <p>
+            At the request of the author/creator, this work is not currently available for public access. If you would like
+            more details about the access conditions for this item, or if you are a member of the FIT community seeking
+            access to this item, please send us a message at <a
+              href="mailto:repository@fitnyc.edu?subject=<?php echo urlencode($mailSubject); ?>"
+              target="_blank">repository@fitnyc.edu</a>.
+          </p>
+        <?php endif; ?>
+      <?php endif; ?>
+    </div>
+    <div class="col-lg-6 col-xl-5" id="extra-metadata">
+      <?php
+      $relatedItemsLinks = [];
+      $currentSiteID = $this->currentSite()->id();
+      $siteSlug = $this->currentSite()->slug();
+      foreach ($item->value('dcterms:relation', ['all' => true]) as $value) {
+        $valueType = $value->type();
+        if ('resource' == $valueType || strpos($valueType, 'resource') !== false) {
+          $thisResource = $value->valueResource();
+          if ($sites = $thisResource->sites()) {
+            $thisLink = null;
+            foreach ($sites as $site) {
+              if ($site->id() == $currentSiteID) {
+                $url = $thisResource->siteUrl($site->slug());
+                $title = $thisResource->displayTitle();
+                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" href="' . $url . '">' . $title . '</a></div>';
+              }
+            }
+            if (!$thisLink) {
+              $url = $thisResource->siteUrl(reset($sites)->slug());
+              $title = $thisResource->displayTitle();
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" target="_blank" href="' . $url . '">' . $title . '</a></div>';
+            }
+            if ($thisLink) {
+              $relatedItemsLinks[] = $thisLink;
+            }
+          }
+        }
+      }
+      foreach ($item->value('dcterms:isPartOf', ['all' => true]) as $value) {
+        $valueType = $value->type();
+        if ('resource' == $valueType || strpos($valueType, 'resource') !== false) {
+          $thisResource = $value->valueResource();
+          if ($sites = $thisResource->sites()) {
+            $thisLink = null;
+            foreach ($sites as $site) {
+              if ($site->id() == $currentSiteID) {
+                $url = $thisResource->siteUrl($site->slug());
+                $title = $thisResource->displayTitle();
+                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" href="' . $url . '">' . $title . '</a></div>';
+              }
+            }
+            if (!$thisLink) {
+              $url = $thisResource->siteUrl(reset($sites)->slug());
+              $title = $thisResource->displayTitle();
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" target="_blank" href="' . $url . '">' . $title . '</a></div>';
+            }
+            if ($thisLink) {
+              $relatedItemsLinks[] = $thisLink;
+            }
+          }
+        }
+      }
+      foreach ($item->value('dcterms:hasPart', ['all' => true]) as $value) {
+        $valueType = $value->type();
+        if ('resource' == $valueType || strpos($valueType, 'resource') !== false) {
+          $thisResource = $value->valueResource();
+          if ($sites = $thisResource->sites()) {
+            $thisLink = null;
+            foreach ($sites as $site) {
+              if ($site->id() == $currentSiteID) {
+                $url = $thisResource->siteUrl($site->slug());
+                $title = $thisResource->displayTitle();
+                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" href="' . $url . '">' . $title . '</a></div>';
+              }
+            }
+            if (!$thisLink) {
+              $url = $thisResource->siteUrl(reset($sites)->slug());
+              $title = $thisResource->displayTitle();
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" target="_blank" href="' . $url . '">' . $title . '</a></div>';
+            }
+            if ($thisLink) {
+              $relatedItemsLinks[] = $thisLink;
+            }
+          }
+        }
+      }
+      $itemSets = $item->itemSets();
+      $primaryCollections = [];
+      $subCollections = [];
+      $categorySets = [];
+      foreach ($itemSets as $key => $itemSet) {
+        if (strtolower($itemSet->displayTitle()) != "special collections and fit archive") {
+          if (array_key_exists($currentSiteID, $itemSet->sites())) {
+            $primaryCollections[] = $itemSet;
+          } else {
+            if (in_array("category", array_map('strtolower', $itemSet->value('dcterms:type', ['all' => true])))) {
+              $categorySets[] = $itemSet;
+            } else {
+              $subCollections[] = $itemSet;
+            }
+          }
+        }
+      }
+      $useSolr = $this->getHelperPluginManager()->has('getSearchFormForSite');
+      $colorPalette = $item->value('fitcore:colorpalette', ['all' => true]);
+      ?>
+      <?php if ($primaryCollections || $subCollections): ?>
+        <div id="collections">
+          <h3 class="fw-light mb-2 h4">
+            <?php echo $translate('Collections'); ?>
+          </h3>
+          <?php foreach ($primaryCollections as $primaryCollection):
+            $title = $primaryCollection->displayTitle();
+            if ($useSolr) {
+              $url = $this->url('site/search', ['site-slug' => $siteSlug], ['query' => ['item_set_id' => [$primaryCollection->id()]]]);
+            } else {
+              $url = $primaryCollection->url();
+            }
+            $count = $this->api()->search('items', ['item_set_id' => $primaryCollection->id(), 'site_id' => $currentSiteID, 'limit' => 0])->getTotalResults() . " items";
+          ?>
+            <div class="card border-0 bg-transparent">
+              <div href="<?php echo $url; ?>" class="card-img rounded-0 ratio ratio-21x9">
+                <?php echo $this->thumbnail($primaryCollection, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white object-fit-cover', 'alt' => $title]); ?>
+              </div>
+              <div class="card-body p-0 mt-2">
+                <p class="h5">
+                  <a href="<?php echo $url; ?>" class="text-dark text-decoration-none stretched-link" title="<?php echo $title; ?>">
+                    <?php echo $title; ?>
+                  </a>
+                  <?php if ($identifier = $primaryCollection->value('dcterms:identifier')): ?>
+                    <br><small class="text-body-secondary">
+                      <?php if ($identifier->type() == "uri"): ?>
+                        <?php echo $identifier->uri(); ?>
+                      <?php else: ?>
+                        <?php echo $identifier; ?>
+                      <?php endif; ?>
+                    </small>
+                  <?php endif; ?>
+                </p>
+                <div class="row justify-content-between">
+                  <div class="col-auto">
+                    <div class="item-count collection-types">
+                      <span class="fst-italic">
+                        <?php echo $count; ?>
+                      </span>
+                      <?php echo $this->CollectionIconHelper($primaryCollection); ?>
+                    </div>
+                  </div>
+                  <?php if ($values = $primaryCollection->value('dcterms:relation', ['all' => true, 'type' => 'uri'])): ?>
+                    <?php foreach ($values as $value): ?>
+                      <?php if (str_contains(trim(strtolower($value->value())), "finding aid")): ?>
+                        <div class="col-auto">
+                          <a class="link-dark text-decoration-none z-3 position-relative" href="<?php echo $value->uri(); ?>" target="_blank">
+                            Finding Aid
+                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="bi bi-box-arrow-up-right ms-1" viewBox="0 0 16 16">
+                              <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5" />
+                              <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z" />
+                            </svg>
+                          </a>
+                        </div>
+                        <?php break; ?>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+          <?php if ($subCollections): ?>
+            <div id="subcollections">
+              <?php if ($primaryCollections): ?>
+                <div class="h4 fw-light mt-4 mb-2">
+                  This item is also part of the following sub-collections/series:
+                </div>
+              <?php endif; ?>
+              <?php foreach ($subCollections as $subCollection):
+                $title = $subCollection->displayTitle();
+                if ($useSolr) {
+                  $url = $this->url('site/search', ['site-slug' => $siteSlug], ['query' => ['item_set_id' => [$subCollection->id()]]]);
+                } else {
+                  $url = $subCollection->url();
+                }
+              ?>
+                <div class="value">
+                  <div class="itemset-link">
+                    <?php echo $this->thumbnail($subCollection, 'medium', ['class' => '', 'alt' => $title]); ?>
+                    <a href="<?php echo $url; ?>" class="itemset-name stretched-link text-dark text-decoration-none"><?php echo $title; ?></a>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
+      <?php if ($relatedItemsLinks): ?>
+        <div id="relatedItems">
+          <h3 class="fw-light mb-2 h4">
+            <?php echo $translate('Related Items'); ?>
+          </h3>
+          <?php foreach ($relatedItemsLinks as $relatedItemsLink): ?>
+            <div class="value">
+              <?php echo $relatedItemsLink; ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+      <?php if ($categorySets): ?>
+        <div id="categories">
+          <h3 class="fw-light mb-2 h4">
+            <?php echo $translate('Categories'); ?>
+          </h3>
+          <?php foreach ($categorySets as $categorySet):
+            $title = $categorySet->displayTitle();
+            if ($useSolr) {
+              $url = $this->url('site/search', ['site-slug' => $siteSlug], ['query' => ['item_set_id' => [$categorySet->id()]]]);
+            } else {
+              $url = $categorySet->url();
+            }
+          ?>
+            <div class="value">
+              <a href="<?php echo $url; ?>" class="itemset-link">
+                <?php echo $this->thumbnail($categorySet, 'medium', ['class' => '', 'alt' => $title]); ?>
+                <span class="itemset-name"><?php echo $title; ?></span>
+              </a>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+      <?php if ($colorPalette): ?>
+        <div>
+          <h3 class="fw-light mb-2 h4">
+            <?php echo $translate('Color Palette'); ?>
+          </h3>
+          <div id="color-palette">
+            <?php foreach ($colorPalette as $color): ?>
+              <div class="value">
+                <?php echo $color->asHtml(); ?>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endif; ?>
+      <div id="citation">
+        <h3 class="fw-light mb-2 h4">
+          <?php echo $translate('Citation'); ?>
+        </h3>
+        <?php echo $this->CitationHelper($item); ?>
+      </div>
+    </div>
+  </div>
+</div>
+
+<?php $this->trigger('view.show.after'); ?>

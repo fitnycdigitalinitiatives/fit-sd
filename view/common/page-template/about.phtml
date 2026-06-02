@@ -1,0 +1,15 @@
+<?php
+$this->htmlElement('body')->appendAttribute('class', 'about');
+$this->pageTitle($this->page->title(), 2);
+?>
+
+<div class="about-jumbotron">
+    <div class="container p-sm-5">
+        <h1 class="text-center">
+            About SPARC Digital
+        </h1>
+        <div class="col-lg-11 col-xl-9 col-xxl-8 mx-auto about-description">
+            <?php echo $this->content; ?>
+        </div>
+    </div>
+</div>

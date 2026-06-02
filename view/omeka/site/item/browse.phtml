@@ -1,0 +1,186 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$this->htmlElement('body')->appendAttribute('class', 'item resource browse');
+
+$filterLocale = (bool) $this->siteSetting('filter_locale_values');
+$lang = $this->lang();
+
+$query = $this->params()->fromQuery();
+$totalResults = $this->pagination()->getPaginator()->getTotalCount();
+$itemSetShow = isset($itemSet);
+if ($itemSetShow):
+  $this->htmlElement('body')->appendAttribute('class', 'item-set');
+  $query['item_set_id'] = $itemSet->id();
+endif;
+$sortHeadings = [];
+?>
+
+<?php if ($itemSetShow): ?>
+  <div id="collection-jumbotron" class="p-5 text-center border-bottom border-black border-2">
+    <div class="jumbotron-background-img-container">
+      <?php echo $this->thumbnail($itemSet, 'medium', ['class' => 'jumbotron-background-img', 'alt' => $itemSet->displayTitle()]); ?>
+    </div>
+    <div id="collection-jumbotron-text" class="container p-5 border border-black border-2">
+      <?php echo $this->pageTitle($itemSet->displayTitle(), 2); ?>
+      <?php if ($itemSet->value('dcterms:description')): ?>
+        <p class="col-lg-8 mx-auto fs-5 collection-description">
+          <?php echo explode("<br", $itemSet->value('dcterms:description')->asHtml())[0]; ?>
+        </p>
+      <?php endif; ?>
+      <div class="col mt-4">
+        <button class="btn btn-outline-dark rounded-0 border-2 mx-1" data-bs-toggle="modal" data-bs-target="#collectionMetadataModal">Read More</button>
+        <?php if ($values = $itemSet->value('dcterms:relation', ['all' => true, 'type' => 'uri'])): ?>
+          <?php foreach ($values as $value): ?>
+            <?php if (str_contains(trim(strtolower($value->value())), "finding aid")): ?>
+              <a class="btn btn-outline-dark rounded-0 border-2 mx-1" href="<?php echo $value->uri(); ?>" target="_blank">View Finding Aid</a>
+              <?php break; ?>
+            <?php endif; ?>
+          <?php endforeach; ?>
+        <?php endif; ?>
+        <button class="btn btn-outline-dark rounded-0 border-2 mx-1" href="http://sparcdigital.fitnyc.local/item-set/467122">Search Inside</button>
+      </div>
+    </div>
+  </div>
+  <!-- Collection Metadata Modal -->
+  <div class="modal fade" id="collectionMetadataModal" tabindex="-1" aria-hidden="true" aria-label="About this Collection">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border border-black border-2 rounded-0">
+        <div class="modal-header border-black border-2 px-5">
+          <h1 class="modal-title fs-5">About</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-5">
+          <?php echo $itemSet->displayValues(); ?>
+        </div>
+      </div>
+    </div>
+  </div>
+<?php endif; ?>
+
+<div id="grid-header" class="container-fluid py-5">
+  <div class="row align-items-center mb-3 mb-sm-2 mb-md-1">
+    <div class="col-auto">
+      <div class="page-title">
+        <?php echo $this->pageTitle($translate('Items'), 2); ?>
+      </div>
+    </div>
+    <div class="col-auto">
+      <?php // check if solr/search module is activated by checking if the helper is present 
+      ?>
+      <?php if (($totalResults > 0) && ($this->getHelperPluginManager()->has('getFacetsForBrowse')) && (!array_key_exists('scroll_request', $query))): ?>
+        <?php $facetsForBrowse = $this->getFacetsForBrowse($query, $itemSetShow); ?>
+        <?php if ($facetsForBrowse && $facetsForBrowse['facets']): ?>
+          <?php
+          $hasFacets = false;
+          foreach ($facetsForBrowse['facets'] as $key => $value) {
+            if ($value) {
+              $hasFacets = true;
+            }
+          }
+          ?>
+          <?php if ($hasFacets): ?>
+            <!-- filter  -->
+            <button id="filter-button" class="btn btn-fit-green floating-action icon-only" type="button"
+              data-bs-toggle="offcanvas" data-bs-target="#searchFilters" aria-controls="searchFilters"
+              aria-label="Filter results">
+              <span class="action-container">
+                <i class="fas fa-filter" aria-hidden="true" title="Filter results">
+                </i>
+              </span>
+            </button>
+            <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="searchFilters"
+              aria-labelledby="searchFiltersLabel">
+              <div class="offcanvas-header border-bottom">
+                <h3 class="offcanvas-title" id="searchFiltersLabel">
+                  <?php echo $this->translate('Search Filters'); ?>
+                </h3>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+              </div>
+              <div class="offcanvas-body p-0">
+                <?php echo $this->partial('search/facets', ['facets' => $facetsForBrowse['facets'], 'dateFacetStats' => $facetsForBrowse['dateFacetStats'], 'queryParams' => $this->params()->fromQuery()]); ?>
+              </div>
+            </div>
+          <?php endif; ?>
+        <?php endif; ?>
+      <?php endif; ?>
+    </div>
+    <div class="w-100 d-sm-none"></div>
+    <div class="col-auto ms-sm-auto mt-3">
+      <div class="card rounded-0 border border-2 border-black">
+        <div class="card-body p-2 p-sm-3 p-md-4 fw-bold">
+          Showing
+          <?php echo number_format($totalResults); ?>
+          <?php echo ($totalResults == 1) ? ' result' : ' results'; ?>
+          <?php if ($totalResults > 0): ?>
+            <div class="d-inline-block ms-2">
+              <button class="border-0 bg-transparent p-0" type="button" data-bs-toggle="dropdown"
+                aria-expanded="false" aria-label="Sort results">
+                <i class="fas fa-sort" aria-hidden="true" title="Sort results"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end rounded-0 border border-2 border-black" id="sort-dropdown">
+                <?php echo $this->sortSelector($sortHeadings); ?>
+              </ul>
+            </div>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <?php if ($this->searchFilters()): ?>
+    <div class="row mt-3 mt-sm-2 mt-md-1">
+      <div class="col-auto">
+        <?php echo $this->searchFilters(); ?>
+      </div>
+    </div>
+  <?php elseif ($itemSetShow): ?>
+    <ul id="query" class="list-inline mb-md-0">
+      <li class="list-inline-item">
+        <a href="/item" class="remove-query link-dark text-decoration-none">
+          <i aria-hidden="true" title="Remove facet:" class="far fa-times-circle"></i>
+          <span class="visually-hidden">Remove facet:</span>
+          <?php echo $itemSet->displayTitle(); ?>
+        </a>
+      </li>
+    </ul>
+  <?php endif; ?>
+</div>
+<?php $this->trigger('view.browse.before'); ?>
+<div id="grid" class="container-fluid">
+  <?php if ($totalResults > 0): ?>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 align-items-center" id="grid-row">
+      <?php
+      foreach ($items as $item):
+        $title = $item->displayTitle();
+      ?>
+        <div class="col grid-item-container">
+          <div class="card border-0 grid-item bg-transparent">
+            <?php echo $item->linkRaw($this->thumbnail($item, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white', 'alt' => $title]), null, ['class' => 'card-img rounded-0', 'title' => $title]); ?>
+            <div class="card-body">
+              <h3 class="grid-item-title">
+                <?php echo $item->link($title, null, ['class' => 'text-dark text-decoration-none', 'title' => $title]); ?>
+              </h3>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <?php $this->trigger('view.browse.after'); ?>
+    <div class="row justify-content-center pagination-row d-none">
+      <div class="col-auto">
+        <?php echo $this->pagination(); ?>
+      </div>
+    </div>
+  <?php else: ?>
+    <div class="row">
+      <div class="col px-sm-5">
+        <p class="lead">
+          <?php echo $this->translate('We\'re sorry, but your search did not return any results. Please try searching again, or browsing through the items or collections.'); ?>
+        </p>
+      </div>
+    </div>
+
+  <?php endif; ?>
+</div>

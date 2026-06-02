@@ -1,0 +1,94 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$site = $this->currentSite();
+$siteID = $site->id();
+$siteSlug = $site->slug();
+$useSolr = $this->getHelperPluginManager()->has('getSearchFormForSite');
+$user = $this->identity();
+$grid = 'row-cols-2 row-cols-md-3 row-cols-xl-4';
+if ($this->resourceType == "item-set") {
+    $grid = 'row-cols-1 row-cols-lg-2 row-cols-xl-3 row-cols-xxl-4';
+}
+$ratio = ($this->resourceType == "item-set") ? "ratio ratio-21x9" : "";
+?>
+<div class="container-fluid py-4 py-sm-5">
+    <div class="row justify-content-center pb-4 pb-sm-5 pt-lg-5">
+        <div class="col-md-4 col-xxl-3 basic-text-block pe-xxl-4">
+            <h2>
+                <?php echo $escape($this->pageTitle); ?>
+            </h2>
+            <?php echo $this->pageText; ?>
+        </div>
+        <div class="col-md-8 col-xl-7 ps-md-4">
+            <div id="grid" class="mt-0 <?php echo $this->resourceType; ?>">
+                <?php if ($this->heading): ?>
+                    <h2 class="mb-4 mb-lg-5"><?php echo $this->heading; ?></h2>
+                <?php endif; ?>
+                <div class="row <?php echo $grid; ?> align-items-center pb-3" id="grid-row">
+                    <?php
+                    foreach ($this->resources as $resource):
+                        $title = $resource->displayTitle();
+                        if (($this->resourceType == "item-set") && $useSolr) {
+                            $url = $this->url('site/search', ['site-slug' => $siteSlug], ['query' => ['item_set_id' => [$resource->id()]]]);
+                        } else {
+                            $url = $resource->url();
+                        }
+                        if ($this->resourceType == "item-set") {
+                            $restricted = false;
+                            foreach ($resource->value('dcterms:accessRights', ['all' => true, 'type' => 'literal']) as $accessRight) {
+                                if (str_contains(strtolower($accessRight), strtolower("Restricted to members of the FIT Community"))) {
+                                    $restricted = true;
+                                    break;
+                                }
+                            }
+                            if (!$user && $restricted) {
+                                $count = "Restricted access";
+                            } else {
+                                $count = $this->api()->search('items', ['item_set_id' => $resource->id(), 'site_id' => $siteID, 'limit' => 0])->getTotalResults() . " items";
+                            }
+                        }
+                    ?>
+                        <div class="col grid-item-container">
+                            <div class="card border-0 grid-item bg-transparent">
+                                <button type="button" data-record="<?php echo $url; ?>" class="viewerModalTrigger p-0 border-0 card-img rounded-0 <?php echo $ratio; ?>" data-bs-toggle="modal" data-bs-target="#viewerModal" aria-label="View full size image and record" data-media="<?php echo htmlspecialchars($resource->primaryMedia()->render()); ?>" data-title="<?php echo $title; ?>" title="<?php echo $title; ?>" data-bs-tooltip="tooltip" data-bs-placement="bottom">
+                                    <?php echo $this->thumbnail($resource, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white object-fit-cover', 'alt' => $title]); ?>
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php if ($this->linkText): ?>
+                    <div class="row justify-content-end">
+                        <div class="col-auto">
+                            <?php
+                            if ($this->linkText) {
+                                if ($this->solrLink && $useSolr) {
+                                    $url = $this->solrLink;
+                                } else {
+                                    $query = $this->query;
+                                    // Add page to item-sets so pagination works correctly
+                                    if ($this->resourceType == "item-set") {
+                                        $query['page'] = 1;
+                                    }
+                                    $url = $this->url(
+                                        'site/resource',
+                                        ['controller' => $this->resourceType, 'action' => 'browse'],
+                                        ['query' => $query],
+                                        true
+                                    );
+                                }
+                                echo $this->hyperlink(
+                                    $this->linkText,
+                                    $url,
+                                    ['class' => 'btn btn-outline-dark rounded-0 border-2 mt-3', 'target' => '_blank']
+                                );
+                            }
+                            ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>

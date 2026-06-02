@@ -1,0 +1,56 @@
+<?php
+$escape = $this->plugin('escapeHtml');
+switch (count($this->attachments)) {
+    case '1':
+        $grid = "row-cols-1";
+        break;
+    case '2':
+        $grid = "row-cols-1 row-cols-md-2";
+        break;
+    case '4':
+        $grid = "row-cols-1 row-cols-md-2 row-cols-xxl-4";
+        break;
+    case '7':
+        $grid = "row-cols-1 row-cols-md-2 row-cols-xl-4";
+        break;
+    case '8':
+        $grid = "row-cols-1 row-cols-md-2 row-cols-xl-4";
+        break;
+    default:
+        $grid = "row-cols-1 row-cols-md-2 row-cols-xl-3";
+        break;
+}
+?>
+<div class="container-fluid py-4 py-sm-5">
+    <div class="row justify-content-center pb-4 pb-sm-5 pt-lg-5">
+        <div class="col-md-4 col-xxl-3 basic-text-block pe-xxl-4">
+            <h2>
+                <?php echo $escape($this->pageTitle); ?>
+            </h2>
+            <?php echo $this->pageText; ?>
+        </div>
+        <div class="col-md-8 col-xl-7 ps-md-4">
+            <div id="grid" class="mt-0">
+                <?php if ($this->heading): ?>
+                    <h2 class="mb-4 mb-lg-5"><?php echo $this->heading; ?></h2>
+                <?php endif; ?>
+                <div class="row <?php echo $grid; ?> align-items-center pb-3" id="grid-row">
+                    <?php
+                    foreach ($this->attachments as $attachment):
+                        $item = $attachment->item();
+                        $media = $attachment->media() ?: $item->primaryMedia();
+                        $title = $item->displayTitle();
+                    ?>
+                        <div class="col grid-item-container">
+                            <div class="card border-0 grid-item bg-transparent">
+                                <button type="button" data-record="<?php echo $item->url(); ?>" class="viewerModalTrigger p-0 border-0 card-img rounded-0" data-bs-toggle="modal" data-bs-target="#viewerModal" aria-label="View full size image and record" data-media="<?php echo htmlspecialchars($media->render()); ?>" data-title="<?php echo $title; ?>" data-title="<?php echo $title; ?>" title="<?php echo $attachment->caption(); ?>" data-bs-tooltip="tooltip" data-bs-placement="bottom" data-bs-html="true">
+                                    <?php echo $this->thumbnail($media, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white object-fit-cover', 'alt' => $title]); ?>
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

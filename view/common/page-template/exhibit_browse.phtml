@@ -1,0 +1,89 @@
+<?php
+$this->htmlElement('body')->appendAttribute('class', 'exhibit_browse');
+$this->pageTitle($this->page->title(), 2);
+if ((strtolower($this->page->title()) == "home") && ($summary = $this->site->summary())) {
+    $this->headMeta()->appendName('description', nl2br($this->escapeHtml($summary)));
+}
+$api = $this->api();
+$siteID = $this->site->id();
+?>
+
+<?php
+$nav = $this->site->publicNav();
+$container = $nav->getContainer();
+$activePage = $nav->findActive($container);
+$exhibits = $activePage['page']->getPages();
+$totalResults = count($exhibits);
+?>
+
+<div id="grid-header" class="container-fluid py-3">
+    <div class="row">
+        <div class="col">
+            <div class="row" id="results">
+                <h1 class="h2 mb-0">Exhibits</h1>
+                <p class="col-auto text-secondary fs-5 mb-0">
+                    Showing
+                    <?php echo number_format($totalResults); ?>
+                    <?php echo ($totalResults == 1) ? ' result' : ' results'; ?>
+                    <?php echo ' total'; ?>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php if ($exhibits): ?>
+    <div id="grid" class="container-fluid mb-5">
+        <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 row-cols-xxl-4 align-items-center" id="grid-row">
+            <?php
+            foreach ($exhibits as $exhibit) :
+                $params = $exhibit->getParams();
+                $this_page = $api->search('site_pages', ['slug' => $params['page-slug'], 'site_id' => $siteID, 'limit' => 1])->getContent()[0];
+                $exhibitURL = $exhibit->getHref();
+            ?>
+                <?php
+                if ($this_page):
+                    $title = $this_page->title();
+                    $thumbnailTag = null;
+                    foreach ($this_page->blocks() as $block) {
+                        if (($block->layout() == 'exhibitLanding') && ($backgroundImage = $block->dataValue('backgroundImage'))) {
+                            $asset = $api->read('assets', $backgroundImage)->getContent();
+                            $assetAlt = $asset->altText();
+                            $thumbnailTag = '<img class="w-100 rounded-0 border border-2 border-white object-fit-cover" src="' . $asset->assetUrl() . '" alt="' . ($assetAlt ? $assetAlt : $title) . '">';
+                            break;
+                        }
+                    }
+                    if (!$thumbnailTag) {
+                        foreach ($this_page->blocks() as $block) {
+                            if ($attachments = $block->attachments()) {
+                                $item = $attachments[0]->item();
+                                $media = $attachments[0]->media() ?: $item->primaryMedia();
+                                $thumbnailTag = $this->thumbnail($media, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white object-fit-cover', 'alt' => $title]);
+                                break;
+                            }
+                        }
+                    }
+                ?>
+                    <div class="col grid-item-container">
+                        <div class="card border-0 grid-item bg-transparent">
+                            <div class="card-img rounded-0 ratio ratio-21x9">
+                                <?php if ($thumbnailTag): ?>
+                                    <?php echo $thumbnailTag; ?>
+                                <?php else: ?>
+                                    <div class="bg-secondary-subtle w-100 h-100 rounded-0 border border-2 border-white img-missing"></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="card-body">
+                                <p class="grid-item-title">
+                                    <a href="<?php echo $exhibitURL; ?>" class="text-dark text-decoration-none stretched-link" title="<?php echo $title; ?>">
+                                        <?php echo $title; ?>
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>

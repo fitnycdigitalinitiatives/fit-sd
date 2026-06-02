@@ -1,0 +1,31 @@
+<?php
+$query = $this->params()->fromQuery();
+$sortByQuery = 'dcterms:date';
+$sortOrderQuery = 'desc';
+if (array_key_exists("sort_by", $query) && $query["sort_by"]) {
+    $sortByQuery = $query["sort_by"];
+}
+if (array_key_exists("sort_order", $query) && $query["sort_order"]) {
+    $sortOrderQuery = $query["sort_order"];
+}
+$currentSort = $sortByQuery . '|' . $sortOrderQuery;
+$sortOptions = ['dcterms:date|desc' => 'Newest to Oldest', 'dcterms:date|asc' => 'Oldest to Newest', 'title|asc' => 'Title (a to z)', 'title|desc' => 'Title (z to a)', 'created|desc' => 'Recently Added'];
+?>
+
+<div class="dropdown d-inline-block">
+    <button class="btn btn-outline-dark rounded-0 border-2 text-nowrap" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Sort results">
+        <?php echo $sortOptions[$currentSort]; ?>
+        <i class="fas fa-sort ms-1" aria-hidden="true"></i>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end rounded-0 border border-2 border-black" id="sort-dropdown">
+        <?php
+        foreach ($sortOptions as $value => $sortOptionLabel):
+        ?>
+            <li>
+                <button class="dropdown-item <?php echo ($currentSort == $value) ? 'fw-bold disabled' : ''; ?>" data-sort_by="<?php echo explode("|", $value)[0]; ?>" data-sort_order="<?php echo explode("|", $value)[1]; ?>">
+                    <?php echo $sortOptionLabel; ?>
+                </button>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+</div>

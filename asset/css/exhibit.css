@@ -1,0 +1,226 @@
+.exhibit header,
+.exhibit footer {
+    display: none !important;
+}
+
+#exhibitContainer {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#exhibitContainer .navbar {
+    background-color: #ff2eaa;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 300;
+    line-height: 1.2;
+    white-space: unset;
+}
+
+.navbar-toggler {
+    font-size: 1.5rem;
+}
+
+#exhibitCarousel {
+    flex-grow: 1;
+}
+
+.carousel-inner {
+    margin-bottom: calc(50px + 1.5rem);
+}
+
+#exhibitCarousel .carousel-inner,
+#exhibitCarousel .carousel-item,
+#exhibitCarousel .block,
+#landing-jumbotron {
+    height: 100%;
+}
+
+#landing-jumbotron {
+    position: relative;
+}
+
+#landing-jumbotron-text {
+    background-color: rgb(255 255 255 / 90%);
+}
+
+#landing-jumbotron-text h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.block-exhibitSectionPage #landing-jumbotron-text h2 {
+    font-size: 2.75rem;
+}
+
+#landing-jumbotron-text h2 small {
+    font-size: .75em;
+}
+
+#landing-jumbotron-text .landing-description {
+    text-align: justify;
+}
+
+@media (max-width: 767px) {
+    .container-fluid {
+        --bs-gutter-x: 48px;
+    }
+}
+
+#exhibitCarousel .basic-text-block p {
+    text-align: justify;
+    font-size: 14px;
+}
+
+#exhibitCarousel #media-slider-container .splide .splide__arrows {
+    display: none;
+}
+
+#exhibitCarousel .item-link {
+    position: absolute;
+    right: 0;
+}
+
+#exhibitCarousel .media-embeds .caption {
+    padding-right: 1.25rem;
+}
+
+#exhibitCarousel .media-embeds .caption p {
+    margin-bottom: 0;
+}
+
+#exhibitNavigation {
+    max-width: calc(100% - 2rem);
+}
+
+#exhibitNavigation .list-group {
+    --bs-list-group-border-width: 2px;
+    --bs-list-group-color: #000;
+    --bs-list-group-action-color: #000;
+    --bs-list-group-border-color: rgba(var(--bs-dark-rgb));
+    --bs-list-group-active-bg: var(--bs-list-group-bg);
+    --bs-list-group-active-color: #000;
+    --bs-list-group-active-border-color: #212529;
+}
+
+#exhibitNavigation .list-group .active {
+    font-weight: bold;
+}
+
+#exhibit-buttons {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+#exhibit-buttons .input-group {
+    background-color: rgb(255 255 255 / 90%);
+    --bs-border-width: 2px;
+}
+
+#viewerModal {
+    --bs-border-width: 2px;
+    --bs-border-color: #000000;
+    --bs-modal-border-color: #000000;
+}
+
+
+
+@media (min-width:576px) {
+    .navbar-brand {
+        font-size: 2rem;
+    }
+
+    .navbar-toggler {
+        font-size: 1.5rem;
+    }
+
+    #landing-jumbotron-text h2 {
+        font-size: 3.25rem;
+    }
+
+    .block-exhibitSectionPage #landing-jumbotron-text h2 {
+        font-size: 3.75rem;
+    }
+
+    #exhibit-buttons .btn,
+    #exhibit-buttons .input-group-text {
+        padding: .5rem 1rem;
+        font-size: 1.25rem;
+    }
+
+    #viewerModal .modal-dialog {
+        --bs-modal-width: 1600px;
+        padding-left: var(--bs-modal-margin);
+        padding-right: var(--bs-modal-margin);
+    }
+}
+
+@media (min-width:768px) {
+    .navbar-brand {
+        font-size: 3rem;
+    }
+
+    .navbar-toggler {
+        font-size: 2.5rem;
+    }
+
+    .block-exhibitSectionPage #landing-jumbotron-text h2 {
+        font-size: 4.5rem;
+    }
+
+    #landing-jumbotron-text .landing-description {
+        font-size: 1.25rem;
+    }
+
+    #viewerModal .modal-dialog {
+        --bs-modal-width: 1600px;
+        padding-left: 36px;
+        padding-right: 36px;
+    }
+}
+
+@media (min-width:992px) {
+    .navbar-brand {
+        font-size: calc(1.525rem + 3.3vw);
+    }
+
+    .navbar-toggler {
+        font-size: calc(1.25rem + 3.3vw);
+    }
+
+    #landing-jumbotron-text h2 {
+        font-size: 4rem;
+    }
+
+    .block-exhibitSectionPage #landing-jumbotron-text h2 {
+        font-size: 5.5rem;
+    }
+}
+
+@media (min-width:1200px) {
+    .navbar-toggler {
+        font-size: 3.5rem;
+    }
+
+    .navbar-brand {
+        font-size: 4rem;
+    }
+
+    #exhibitCarousel .basic-text-block {
+        max-width: 500px;
+    }
+
+    #exhibitCarousel .basic-text-block p {
+        font-size: 1rem;
+    }
+
+    .block-exhibitSectionPage #landing-jumbotron-text h2 {
+        font-size: 7rem;
+    }
+}

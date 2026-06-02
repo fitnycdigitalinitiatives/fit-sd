@@ -1,0 +1,31 @@
+<?php
+$escape = $this->plugin('escapeHtml');
+?>
+
+<div id="landing-jumbotron" class="p-4 p-sm-5">
+    <div class="jumbotron-background-img-container">
+        <?php if ($this->backgroundImageURL): ?>
+            <img class="jumbotron-background-img" alt="<?php echo $this->backgroundImageAlt ? $escape($this->backgroundImageAlt) : $escape($this->pageTitle) . ' decorative background image'; ?>" src="<?php echo $this->backgroundImageURL; ?>">
+        <?php endif; ?>
+    </div>
+    <div id="landing-jumbotron-text" class="container p-4 p-sm-5 border border-black border-2">
+        <div class="row justify-content-center">
+            <div class="col-lg-11 col-xl-9 col-xxl-8">
+                <hgroup class="text-center">
+                    <h2>
+                        <?php echo $escape($this->pageTitle); ?>
+                    </h2>
+                    <?php if ($this->pageSubtitle): ?>
+                        <p class="text-body-secondary h1 mb-4">
+                            <?php echo $escape($this->pageSubtitle); ?>
+                        </p>
+                    <?php endif; ?>
+                </hgroup>
+                <div class="landing-description">
+                    <?php echo $this->html; ?>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

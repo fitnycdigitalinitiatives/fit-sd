@@ -1,0 +1,107 @@
+<?php
+
+use OmekaTheme\Helper\CollectionIconHelper;
+
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$filterLocale = (bool) $this->siteSetting('filter_locale_values');
+$lang = $this->lang();
+
+$this->htmlElement('body')->appendAttribute('class', 'item-set resource browse');
+$totalResults = $this->pagination()->getPaginator()->getTotalCount();
+$sortHeadings = [];
+$siteID = $site->id();
+$siteSlug = $site->slug();
+?>
+
+<?php $this->pageTitle($translate('Collections')); ?>
+
+<div id="grid-header" class="container-fluid py-3">
+  <div class="row">
+    <div class="col">
+      <div class="row" id="results">
+        <h1 class="h2 mb-0">Collections</h1>
+        <p class="col-auto text-secondary fs-5 mb-0">
+          Showing
+          <?php echo number_format($totalResults); ?>
+          <?php echo ($totalResults == 1) ? ' result' : ' results'; ?>
+          <?php echo ' total'; ?>
+        </p>
+      </div>
+    </div>
+    <div class="col-12 col-sm-auto mt-3 mt-sm-0">
+      <?php if ($totalResults > 0): ?>
+        <?php echo $this->sortSelector($sortHeadings); ?>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
+
+<?php $this->trigger('view.browse.before'); ?>
+<div id="grid" class="container-fluid mb-5">
+  <?php if ($totalResults > 0): ?>
+    <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 row-cols-xxl-4 align-items-center" id="grid-row">
+      <?php
+      $useSolr = $this->getHelperPluginManager()->has('getSearchFormForSite');
+      $user = $this->identity();
+      foreach ($itemSets as $itemSet): {
+          $title = $itemSet->displayTitle();
+          if ($useSolr) {
+            $url = $this->url('site/search', ['site-slug' => $siteSlug], ['query' => ['item_set_id' => [$itemSet->id()]]]);
+          } else {
+            $url = $itemSet->url();
+          }
+          $restricted = false;
+          foreach ($itemSet->value('dcterms:accessRights', ['all' => true, 'type' => 'literal']) as $accessRight) {
+            if (str_contains(strtolower($accessRight), strtolower("Restricted to members of the FIT Community"))) {
+              $restricted = true;
+              break;
+            }
+          }
+          if (!$user && $restricted) {
+            $count = "Restricted access";
+          } else {
+            $count = $this->api()->search('items', ['item_set_id' => $itemSet->id(), 'site_id' => $siteID, 'limit' => 0])->getTotalResults() . " items";
+          }
+        }
+      ?>
+        <div class="col grid-item-container">
+          <div class="card border-0 grid-item bg-transparent">
+            <div class="card-img rounded-0 ratio ratio-21x9">
+              <?php echo $this->thumbnail($itemSet, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white object-fit-cover', 'alt' => $title]); ?>
+            </div>
+            <div class="card-body">
+              <p class="grid-item-title">
+                <a href="<?php echo $url; ?>" class="text-dark text-decoration-none stretched-link" title="<?php echo $title; ?>">
+                  <?php echo $title; ?>
+                </a>
+              </p>
+              <div class="item-count collection-types">
+                <span class="fst-italic">
+                  <?php echo $count; ?>
+                </span>
+                <?php echo $this->CollectionIconHelper($itemSet); ?>
+              </div>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <?php $this->trigger('view.browse.after'); ?>
+    <div class="row justify-content-center pagination-row d-none">
+      <div class="col-auto">
+        <?php echo $this->pagination(); ?>
+      </div>
+    </div>
+  <?php else: ?>
+    <div class="row">
+      <div class="col px-sm-5">
+        <p class="lead">
+          <?php echo $translate('We\'re sorry, but your search did not return any results. Please try searching again, or browsing through the items or collections.'); ?>
+        </p>
+      </div>
+    </div>
+    <?php $this->trigger('view.browse.after'); ?>
+  <?php endif; ?>
+</div>

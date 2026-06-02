@@ -1,0 +1,62 @@
+<?php
+$translate = $this->plugin('translate');
+$hyperlink = $this->plugin('hyperlink');
+$urlHelper = $this->plugin('url');
+$user = $this->user;
+?>
+<?php if ($user): ?>
+	<div class="dropdown position-fixed" id="user-button">
+		<button type="button" class="btn btn-fit-green round-floating-action" data-bs-toggle="dropdown" aria-expanded="false" aria-label="<?php echo ($user) ? "User Account" : "User Login"; ?>" title="<?php echo ($user) ? "User Account" : "User Login"; ?>">
+			<div class="action-container">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16" aria-hidden="true">
+					<path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+				</svg>
+			</div>
+		</button>
+		<ul class="dropdown-menu border-2 border-black rounded-0 shadow">
+			<?php if ($user): ?>
+				<?php if ($this->userIsAllowed('Omeka\Controller\Admin\User', 'show')): ?>
+					<li id="user-name">
+						<?php
+						$url = $adminname . $urlHelper('admin/id', ['controller' => 'user', 'id' => $user->getId()]);
+						echo $hyperlink($user->getName(), $url, ['class' => 'dropdown-item']);
+						?>
+					</li>
+				<?php else: ?>
+					<li id="user-name">
+						<span class="dropdown-item-text">
+							<?php echo $user->getName(); ?>
+						</span>
+					</li>
+				<?php endif; ?>
+
+				<?php if ($links): ?>
+					<li>
+						<hr class="dropdown-divider border-2 border-black">
+					</li>
+					<?php foreach ($links as $link): ?>
+						<li class="admin <?php echo $link['resource'] . ' ' . $link['action']; ?>">
+							<?php echo $hyperlink($link['text'], $link['url'], ['class' => 'dropdown-item']); ?>
+						</li>
+					<?php endforeach; ?>
+				<?php endif; ?>
+				<li>
+					<hr class="dropdown-divider border-2 border-black">
+				</li>
+				<li>
+					<?php echo $hyperlink("Sign out", $urlHelper('logout'), ['class' => 'dropdown-item']); ?>
+				</li>
+			<?php else: ?>
+				<li>
+					<span id="fit-user" class="dropdown-item-text lead">Members of the FIT Community can access restricted materials by logging into their FIT Accounts.</span>
+				</li>
+				<li>
+					<hr class="dropdown-divider border-2 border-black">
+				</li>
+				<div class="d-grid gap-2 px-3 py-1">
+					<?php echo $this->ssoLoginLinks(['template' => 'common/sso-login-button'], $urlHelper(null, [], ['query' => $this->params()->fromQuery()], true)); ?>
+				</div>
+			<?php endif; ?>
+		</ul>
+	</div>
+<?php endif; ?>

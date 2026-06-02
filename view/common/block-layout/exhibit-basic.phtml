@@ -1,0 +1,118 @@
+<?php
+$escape = $this->plugin('escapeHtml');
+?>
+<div class="container-fluid py-4 py-sm-5">
+    <div class="row justify-content-center pb-4 pb-sm-5 pt-lg-5">
+        <div class="col-md-4 col-xxl-3 basic-text-block pe-xxl-4">
+            <h2>
+                <?php echo $escape($this->pageTitle); ?>
+            </h2>
+            <?php echo $this->pageText; ?>
+        </div>
+        <div class="col-md-8 col-xl-7 ps-md-4">
+            <?php if ((count($this->attachments) > 1)): ?>
+                <div class="row justify-content-center media-wrapper">
+                    <div class="col">
+                        <div class="media-embeds">
+                            <div class="tab-content" id="mediaTabContent">
+                                <?php $panel_id = 1; ?>
+                                <?php
+                                foreach ($this->attachments as $attachment):
+                                    $item = $attachment->item();
+                                    $media = $attachment->media() ?: $item->primaryMedia();
+                                ?>
+                                    <?php if ($media): ?>
+                                        <div class="tab-pane<?php echo ($panel_id == 1 ? ' show active' : ''); ?> position-relative" id="media-<?php echo $panel_id; ?>"
+                                            role="tabpanel" aria-labelledby="media-<?php echo $panel_id; ?>-tab">
+                                            <?php echo $media->render(); ?>
+                                            <div class="item-link">
+                                                <a class="link-dark" href="<?php echo $item->url(); ?>" target="_blank" title="View full item record" aria-label="View full item record">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16" aria-hidden="true">
+                                                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                            <div class="caption mt-2 mb-1 small">
+                                                <?php echo $attachment->caption(); ?>
+                                            </div>
+                                        </div>
+                                        <?php $panel_id++; ?>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row justify-content-center mt-2" id="slider-row">
+                    <div class="col">
+                        <div class="row position-relative">
+                            <div class="col-auto" id="media-slider-container">
+                                <div class="splide position-static" role="tablist" aria-label="Media tabs">
+                                    <div class="splide__track">
+                                        <ul class="splide__list">
+                                            <?php $tab_id = 1; ?>
+                                            <?php
+                                            foreach ($this->attachments as $attachment):
+                                                $item = $attachment->item();
+                                                $media = $attachment->media() ?: $item->primaryMedia();
+                                            ?>
+                                                <?php if ($media): ?>
+                                                    <li class="splide__slide border-0" id="media-<?php echo $tab_id; ?>-tab" data-target="#media-<?php echo $tab_id; ?>" data-slidenumber="<?php echo $tab_id; ?>" type="button"
+                                                        role="tab" aria-controls="media-<?php echo $tab_id; ?>"
+                                                        aria-selected="<?php echo ($tab_id == 1 ? 'true' : 'false'); ?>"
+                                                        title="<?php echo $item->displayTitle(); ?>" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                                                        <?php echo $this->thumbnail($media, 'medium', ['class' => 'img-fluid', 'alt' => $item->displayTitle()]); ?>
+                                                    </li>
+                                                    <?php $tab_id++; ?>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                    <div class="splide__arrows">
+                                        <button class="slider-arrow splide__arrow--prev rounded-circle p-2 lh-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-caret-left-fill" viewBox="0 0 16 16" aria-hidden="true">
+                                                <path d="m3.86 8.753 5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z" />
+                                            </svg>
+                                        </button>
+                                        <div id="slide-indicator" class="lh-1 px-1">
+                                            <span id="current-slide-indicator">1</span>
+                                            <span>/</span>
+                                            <span><?php echo ($tab_id - 1); ?></span>
+                                        </div>
+                                        <button class="slider-arrow splide__arrow--next rounded-circle p-2 lh-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-caret-right-fill" viewBox="0 0 16 16" aria-hidden="true">
+                                                <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="row justify-content-center media-wrapper">
+                    <div class="col">
+                        <div class="media-embeds position-relative">
+                            <?php
+                            $item = $this->attachments[0]->item();
+                            $media = $this->attachments[0]->media() ?: $item->primaryMedia();
+                            ?>
+                            <?php echo $media->render(); ?>
+                            <div class="item-link">
+                                <a class="link-dark" href="<?php echo $item->url(); ?>" target="_blank" title="View full item record" aria-label="View full item record">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16" aria-hidden="true">
+                                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
+                                    </svg>
+                                </a>
+                            </div>
+                            <div class="caption mt-2 mb-1 small">
+                                <?php echo $this->attachments[0]->caption(); ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>

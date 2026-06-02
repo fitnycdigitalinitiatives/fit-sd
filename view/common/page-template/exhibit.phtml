@@ -1,0 +1,115 @@
+<?php
+$this->htmlElement('body')->appendAttribute('class', 'exhibit');
+$this->pageTitle($this->page->title(), 2);
+$this->headLink()->appendStylesheet('https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css');
+$this->headLink()->appendStylesheet($this->assetUrl('css/exhibit.css'));
+$this->headScript()->appendFile('https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js');
+$this->headScript()->appendFile($this->assetUrl('js/exhibit.js'));
+$exhibit_nav = [];
+?>
+
+<div id="exhibitContainer">
+    <nav class="navbar border-bottom border-dark border-2 pb-3 sticky-top">
+        <div class="container-fluid d-block">
+            <div class="row align-items-center justify-content-between">
+                <div class="col">
+                    <h1 class="navbar-brand mb-0"><?php echo $this->page->title(); ?></h1>
+                </div>
+                <div class="col-auto">
+                    <button class="navbar-toggler border-0 p-0 text-dark" type="button" data-bs-toggle="offcanvas" data-bs-target="#exhibitNavigation" aria-controls="exhibitNavigation" aria-label="Toggle navigation">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <?php $this->trigger('view.show.before'); ?>
+    <div id="exhibitCarousel" class="carousel carousel-dark slide" data-bs-touch="false" data-bs-keyboard="false">
+        <div class="carousel-inner">
+            <?php foreach ($this->page->blocks() as $index => $block): ?>
+                <section class="carousel-item <?php echo ($index == 0) ? "active" : "" ?>" tabindex="-1">
+                    <?php
+                    echo $this->blockLayout()->render($block);
+                    $exhibit_nav[] = $block->dataValue("pageTitle", "Untitled");
+                    ?>
+                </section>
+
+            <?php endforeach; ?>
+        </div>
+        <div class="d-flex justify-content-center mb-4 mb-sm-5" id="exhibit-buttons">
+            <div class="col-auto">
+                <div class="input-group">
+                    <button class="btn btn-outline-dark exhibit-pagination-button rounded-0" type="button" data-bs-target="#exhibitCarousel" data-bs-slide="prev" aria-label="Previous page">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-caret-left-fill" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="m3.86 8.753 5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z"></path>
+                        </svg>
+                    </button>
+                    <span class="input-group-text border-dark bg-transparent">
+                        Page&nbsp;<span class="pagination-current-page">1</span>&nbsp;of <?php echo count($exhibit_nav); ?> </span>
+                    <button class="btn btn-outline-dark exhibit-pagination-button rounded-0" type="button" data-bs-target="#exhibitCarousel" data-bs-slide="next" aria-label="Next page">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-caret-right-fill" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="offcanvas offcanvas-end m-3 border border-2 border-dark" tabindex="-1" id="exhibitNavigation" aria-label="Exhibit Navigation">
+        <div class="w-100 h-100 overflow-y-auto">
+            <div class="offcanvas-header border-bottom border-2 border-dark bg-dark text-white">
+                <div class="offcanvas-title fs-3" id="offcanvasLabel">Exhibit Pages</div>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close" data-bs-theme="dark"></button>
+            </div>
+            <ul class="list-group list-group-flush fs-5">
+                <?php foreach ($exhibit_nav as $index => $blockTitle): ?>
+                    <button class="list-group-item list-group-item-action slide-trigger <?php echo ($index == 0) ? "active disabled" : "" ?>" type="button" data-index="<?php echo $index; ?>" aria-current="<?php echo ($index == 0) ? "true" : "false" ?>" aria-disabled="<?php echo ($index == 0) ? "true" : "false" ?>"> <?php echo $blockTitle ?></button>
+                <?php endforeach; ?>
+            </ul>
+            <div class="offcanvas-header border-top border-bottom border-2 border-dark bg-dark text-white">
+                <div class="offcanvas-title fs-3" id="offcanvasLabel">Site Pages</div>
+            </div>
+            <ul class="list-group list-group-flush fs-5 border-bottom border-dark border-2">
+                <a class="list-group-item list-group-item-action fw-normal" href="<?php echo $this->site->url(); ?>">Home</a>
+                <?php $container = $this->site->publicNav()->getContainer(); ?>
+                <?php foreach ($container as $page): ?>
+                    <?php if ($this->navigation()->accept($page)): ?>
+                        <a class="list-group-item list-group-item-action fw-normal" href="<?php echo $page->getHref() ?>">
+                            <?php echo $this->escapeHtml($page->getLabel()); ?>
+                        </a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="viewerModal" tabindex="-1" aria-labelledby="viewerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content rounded-0">
+                <div class="modal-header">
+                    <h3 class="modal-title fs-5" id="viewerModalLabel">Viewer Modal</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body media-wrapper">
+                    <div class="ratio ratio-16x9">
+                        <div></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a id="viewerLink" href="" class="btn btn-outline-dark rounded-0" target="_blank">
+                        View full item record
+                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="bi bi-box-arrow-up-right ms-1" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"></path>
+                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php $this->trigger('view.show.after'); ?>
+</div>
