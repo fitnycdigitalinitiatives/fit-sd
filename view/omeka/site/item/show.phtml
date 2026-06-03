@@ -32,7 +32,7 @@ $lang = $this->lang();
                 <?php $panel_id = 1; ?>
                 <?php foreach ($itemMedia as $media): ?>
                   <div class="tab-pane<?php echo ($panel_id == 1 ? ' show active' : ''); ?>" id="media-<?php echo $panel_id; ?>"
-                    role="tabpanel" aria-labelledby="media-<?php echo $panel_id; ?>-tab">
+                    role="tabpanel" aria-label="<?php echo $media->displayTitle(); ?>">
                     <?php echo $media->render(); ?>
                   </div>
                 <?php
@@ -47,20 +47,20 @@ $lang = $this->lang();
           <div class="col">
             <div class="row position-relative">
               <div class="col-auto" id="media-slider-container">
-                <div class="splide position-static" role="tablist" aria-label="Media tabs">
+                <div class="splide position-static">
                   <div class="splide__track">
-                    <ul class="splide__list">
+                    <div class="splide__list" role="tablist" aria-label="Media tabs">
                       <?php $tab_id = 1; ?>
                       <?php foreach ($itemMedia as $media): ?>
-                        <li class="splide__slide border-0" id="media-<?php echo $tab_id; ?>-tab" data-target="#media-<?php echo $tab_id; ?>" data-slidenumber="<?php echo $tab_id; ?>" type="button"
+                        <button class="splide__slide border-0 bg-transparent" id="media-<?php echo $tab_id; ?>-tab" data-target="#media-<?php echo $tab_id; ?>" data-slidenumber="<?php echo $tab_id; ?>" type="button"
                           role="tab" aria-controls="media-<?php echo $tab_id; ?>"
                           aria-selected="<?php echo ($tab_id == 1 ? 'true' : 'false'); ?>"
-                          title="<?php echo $media->displayTitle(); ?>" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="splide-tooltip">
+                          data-bs-title="<?php echo $media->displayTitle(); ?>" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="splide-tooltip">
                           <?php echo $this->thumbnail($media, 'medium', ['class' => 'img-fluid', 'alt' => $media->displayTitle()]); ?>
-                        </li>
+                        </button>
                         <?php $tab_id++; ?>
                       <?php endforeach; ?>
-                    </ul>
+                    </div>
                   </div>
                   <div class="splide__arrows">
                     <button class="slider-arrow splide__arrow--prev rounded-circle p-2 lh-1">

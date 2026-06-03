@@ -111,7 +111,7 @@ $(document).ready(function () {
             $(collectionSearchForm).append(`
                 <div class="form-check me-2 mb-0 fw-normal">
                     <input class="form-check-input border-1 border-secondary-subtle" type="checkbox" value="" name="collection-search-full-text" id="collection-search-full-text" checked>
-                    <label class="form-check-label" for="full-text">
+                    <label class="form-check-label" for="collection-search-full-text">
                         Full-Text Search
                     </label>
                 </div>

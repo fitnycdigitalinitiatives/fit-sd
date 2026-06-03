@@ -60,9 +60,6 @@
     font-size: .75em;
 }
 
-#landing-jumbotron-text .landing-description {
-    text-align: justify;
-}
 
 @media (max-width: 767px) {
     .container-fluid {
@@ -71,7 +68,6 @@
 }
 
 #exhibitCarousel .basic-text-block p {
-    text-align: justify;
     font-size: 14px;
 }
 

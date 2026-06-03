@@ -85,13 +85,13 @@ $filterLocaleCallback = function ($value) use ($lang) {
                         <?php echo $filterLocale ? $value->asHtml($lang) : $value->asHtml(); ?>
                     </span>
                     <?php if (!$value->isPublic()): ?>
-                        <span class="o-icon-private" aria-role="tooltip"
+                        <span class="o-icon-private" role="tooltip"
                             title="<?php echo $this->escapeHtml($translate('Private')); ?>"
                             aria-label="<?php echo $this->escapeHtml($translate('Private')); ?>"></span>
                     <?php endif; ?>
                     <?php if ($valueAnnotation && $showValueAnnotations): ?>
                         <a href="#" class="expand" aria-label="<?php echo $this->escapeHtml($translate('Expand')); ?>">
-                            <span class="has-annotation o-icon-annotation" aria-role="tooltip"
+                            <span class="has-annotation o-icon-annotation" role="tooltip"
                                 title="<?php echo $this->escapeHtml($translate('Has annotation')); ?>"
                                 aria-label="<?php echo $this->escapeHtml($translate('Has annotation')); ?>"></span>
                         </a>

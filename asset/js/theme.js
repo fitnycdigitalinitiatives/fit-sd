@@ -160,7 +160,16 @@ $(document).ready(function () {
       classes: {
         arrow: 'slider-arrow',
       }
-    }).mount();
+    })
+    thisSplide.on('mounted', function () {
+      splideElement.querySelector('.splide__list').setAttribute('role', 'tablist');;
+      const buttons = splideElement.querySelectorAll('.splide__slide');
+      buttons.forEach(function (button) {
+        button.setAttribute('role', 'tab');
+        button.setAttribute('aria-controls', button.dataset.target.replace("#", ""));
+        button.setAttribute('aria-label', 'Go to ' + button.dataset.bsTitle);
+      });
+    });
     thisSplide.on('active', function (Slide) {
       const thisSlide = $(Slide.slide);
       const selectedTab = thisSlide.data('target');
@@ -181,6 +190,7 @@ $(document).ready(function () {
       $(selectedTab).addClass('show active');
       $('#current-slide-indicator').text(thisSlide.data('slidenumber'));
     });
+    thisSplide.mount();
   });
   if (window.matchMedia('(min-width: 768px)').matches) {
     //tooltips

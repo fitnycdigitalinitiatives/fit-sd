@@ -742,12 +742,6 @@ footer #fit-logo {
   font-size: .75em;
 }
 
-#collection-jumbotron .collection-description,
-.collection-disclaimer,
-.jumbotron-description {
-  text-align: justify;
-}
-
 .about-lead {
   font-size: 1.25em;
 }
