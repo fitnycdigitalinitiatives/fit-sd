@@ -1,6 +1,7 @@
 <?php
 $escape = $this->plugin('escapeHtml');
 $api = $this->plugin('api');
+$hyperlink = $this->plugin('hyperlink');
 ?>
 
 <?php if ($attachments): ?>
@@ -41,7 +42,7 @@ $api = $this->plugin('api');
                                 <?php echo $escape($slide_title); ?>
                             </h2>
                             <p class="text-truncate h3 subtitle"><?php echo $escape($caption); ?></p>
-                            <a class="btn btn-outline-light rounded-0 border-2 mt-sm-3" href="<?php echo $item_set_url; ?>">View Collection</a>
+                            <?php echo $hyperlink('View Collection', $item_set_url, ['class' => 'btn btn-outline-light rounded-0 border-2 mt-sm-3']); ?>
                         </div>
                     </div>
                 <?php endif; ?>

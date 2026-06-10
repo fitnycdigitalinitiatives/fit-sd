@@ -3,6 +3,7 @@ $this->headLink()->appendStylesheet('https://cdn.jsdelivr.net/npm/@splidejs/spli
 $this->headScript()->appendFile('https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js');
 $translate = $this->plugin('translate');
 $escape = $this->plugin('escapeHtml');
+$hyperlink = $this->plugin('hyperlink');
 $this->htmlElement('body')->appendAttribute('class', 'item resource show');
 $embedMedia = $this->siteSetting('item_media_embed', false);
 $itemMedia = $item->media();
@@ -46,7 +47,7 @@ $lang = $this->lang();
         <div class="row justify-content-center mt-2" id="slider-row">
           <div class="col">
             <div class="row position-relative">
-              <div class="col-auto" id="media-slider-container">
+              <div class="col-auto media-slider-container" id="this-media-slider-container">
                 <div class="splide position-static">
                   <div class="splide__track">
                     <div class="splide__list" role="tablist" aria-label="Media tabs">
@@ -55,7 +56,7 @@ $lang = $this->lang();
                         <button class="splide__slide border-0 bg-transparent" id="media-<?php echo $tab_id; ?>-tab" data-target="#media-<?php echo $tab_id; ?>" data-slidenumber="<?php echo $tab_id; ?>" type="button"
                           role="tab" aria-controls="media-<?php echo $tab_id; ?>"
                           aria-selected="<?php echo ($tab_id == 1 ? 'true' : 'false'); ?>"
-                          data-bs-title="<?php echo $media->displayTitle(); ?>" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="splide-tooltip">
+                          data-bs-title="<?php echo $escape($media->displayTitle()); ?>" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="splide-tooltip">
                           <?php echo $this->thumbnail($media, 'medium', ['class' => 'img-fluid', 'alt' => $media->displayTitle()]); ?>
                         </button>
                         <?php $tab_id++; ?>
@@ -171,13 +172,13 @@ $lang = $this->lang();
               if ($site->id() == $currentSiteID) {
                 $url = $thisResource->siteUrl($site->slug());
                 $title = $thisResource->displayTitle();
-                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" href="' . $url . '">' . $title . '</a></div>';
+                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title]) . '</div>';
               }
             }
             if (!$thisLink) {
               $url = $thisResource->siteUrl(reset($sites)->slug());
               $title = $thisResource->displayTitle();
-              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" target="_blank" href="' . $url . '">' . $title . '</a></div>';
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title, 'target' => '_blank']) . '</div>';
             }
             if ($thisLink) {
               $relatedItemsLinks[] = $thisLink;
@@ -195,13 +196,13 @@ $lang = $this->lang();
               if ($site->id() == $currentSiteID) {
                 $url = $thisResource->siteUrl($site->slug());
                 $title = $thisResource->displayTitle();
-                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" href="' . $url . '">' . $title . '</a></div>';
+                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title]) . '</div>';
               }
             }
             if (!$thisLink) {
               $url = $thisResource->siteUrl(reset($sites)->slug());
               $title = $thisResource->displayTitle();
-              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" target="_blank" href="' . $url . '">' . $title . '</a></div>';
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title, 'target' => '_blank']) . '</div>';
             }
             if ($thisLink) {
               $relatedItemsLinks[] = $thisLink;
@@ -219,13 +220,13 @@ $lang = $this->lang();
               if ($site->id() == $currentSiteID) {
                 $url = $thisResource->siteUrl($site->slug());
                 $title = $thisResource->displayTitle();
-                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" href="' . $url . '">' . $title . '</a></div>';
+                $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title]) . '</div>';
               }
             }
             if (!$thisLink) {
               $url = $thisResource->siteUrl(reset($sites)->slug());
               $title = $thisResource->displayTitle();
-              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . '<a class="resource-name stretched-link text-dark text-decoration-none" target="_blank" href="' . $url . '">' . $title . '</a></div>';
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title, 'target' => '_blank']) . '</div>';
             }
             if ($thisLink) {
               $relatedItemsLinks[] = $thisLink;
@@ -268,14 +269,12 @@ $lang = $this->lang();
             $count = $this->api()->search('items', ['item_set_id' => $primaryCollection->id(), 'site_id' => $currentSiteID, 'limit' => 0])->getTotalResults() . " items";
           ?>
             <div class="card border-0 bg-transparent">
-              <div href="<?php echo $url; ?>" class="card-img rounded-0 ratio ratio-21x9">
+              <div class="card-img rounded-0 ratio ratio-21x9">
                 <?php echo $this->thumbnail($primaryCollection, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white object-fit-cover', 'alt' => $title]); ?>
               </div>
               <div class="card-body p-0 mt-2">
                 <p class="h5">
-                  <a href="<?php echo $url; ?>" class="text-dark text-decoration-none stretched-link" title="<?php echo $title; ?>">
-                    <?php echo $title; ?>
-                  </a>
+                  <?php echo $hyperlink($title, $url, ['class' => 'text-dark text-decoration-none stretched-link', 'title' => $title]); ?>
                   <?php if ($identifier = $primaryCollection->value('dcterms:identifier')): ?>
                     <br><small class="text-body-secondary">
                       <?php if ($identifier->type() == "uri"): ?>
@@ -333,7 +332,7 @@ $lang = $this->lang();
                 <div class="value">
                   <div class="itemset-link">
                     <?php echo $this->thumbnail($subCollection, 'medium', ['class' => '', 'alt' => $title]); ?>
-                    <a href="<?php echo $url; ?>" class="itemset-name stretched-link text-dark text-decoration-none"><?php echo $title; ?></a>
+                    <?php echo $hyperlink($title, $url, ['class' => 'itemset-name stretched-link text-dark text-decoration-none', 'title' => $title]); ?>
                   </div>
                 </div>
               <?php endforeach; ?>
@@ -367,10 +366,10 @@ $lang = $this->lang();
             }
           ?>
             <div class="value">
-              <a href="<?php echo $url; ?>" class="itemset-link">
+              <div class="itemset-link">
                 <?php echo $this->thumbnail($categorySet, 'medium', ['class' => '', 'alt' => $title]); ?>
-                <span class="itemset-name"><?php echo $title; ?></span>
-              </a>
+                <?php echo $hyperlink($title, $url, ['class' => 'itemset-name stretched-link text-dark text-decoration-none', 'title' => $title]); ?>
+              </div>
             </div>
           <?php endforeach; ?>
         </div>

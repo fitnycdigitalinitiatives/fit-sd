@@ -173,22 +173,24 @@ $(document).ready(function () {
     thisSplide.on('active', function (Slide) {
       const thisSlide = $(Slide.slide);
       const selectedTab = thisSlide.data('target');
-      $('#media-slider-container .splide .splide__slide').removeClass('selected').attr('aria-selected', 'false');
+      const sliderContainer = thisSlide.closest('.media-slider-container');
+      const tabContent = $(selectedTab).closest('.tab-content');
+      sliderContainer.find('.splide__slide').removeClass('selected').attr('aria-selected', 'false');
       thisSlide.addClass('selected').attr('aria-selected', 'true');
-      $('#mediaTabContent .tab-pane').removeClass('show active');
+      tabContent.find('.tab-pane').removeClass('show active');
       // Pause video when changing tabs
-      $('#mediaTabContent .tab-pane:not(' + selectedTab + ') .youtube').each(function () {
+      tabContent.find('.tab-pane:not(' + selectedTab + ') .youtube').each(function () {
         $(this)[0].contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
       });
-      $('#mediaTabContent .tab-pane:not(' + selectedTab + ') .vimeo').each(function () {
+      tabContent.find('.tab-pane:not(' + selectedTab + ') .vimeo').each(function () {
         $(this)[0].contentWindow.postMessage('{"method":"pause"}', '*');
       });
-      $('#mediaTabContent .tab-pane:not(' + selectedTab + ') .vjs-tech').each(function () {
+      tabContent.find('.tab-pane:not(' + selectedTab + ') .vjs-tech').each(function () {
         $(this).get(0).pause();
       });
       // Now show tab
       $(selectedTab).addClass('show active');
-      $('#current-slide-indicator').text(thisSlide.data('slidenumber'));
+      sliderContainer.find('#current-slide-indicator').text(thisSlide.data('slidenumber'));
     });
     thisSplide.mount();
   });

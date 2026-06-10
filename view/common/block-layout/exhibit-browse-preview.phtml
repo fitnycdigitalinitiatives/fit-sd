@@ -51,7 +51,7 @@ $ratio = ($this->resourceType == "item-set") ? "ratio ratio-21x9" : "";
                     ?>
                         <div class="col grid-item-container">
                             <div class="card border-0 grid-item bg-transparent">
-                                <button type="button" data-record="<?php echo $url; ?>" class="viewerModalTrigger p-0 border-0 card-img rounded-0 <?php echo $ratio; ?>" data-bs-toggle="modal" data-bs-target="#viewerModal" aria-label="View full size image and record" data-media="<?php echo htmlspecialchars($resource->primaryMedia()->render()); ?>" data-title="<?php echo $title; ?>" title="<?php echo $title; ?>" data-bs-tooltip="tooltip" data-bs-placement="bottom">
+                                <button type="button" data-record="<?php echo $url; ?>" class="viewerModalTrigger p-0 border-0 card-img rounded-0 <?php echo $ratio; ?>" data-bs-toggle="modal" data-bs-target="#viewerModal" aria-label="View full size image and record" data-media="<?php echo htmlspecialchars($resource->primaryMedia()->render()); ?>" data-title="<?php echo $escape($title); ?>" title="<?php echo $escape($title); ?>" data-bs-tooltip="tooltip" data-bs-placement="bottom">
                                     <?php echo $this->thumbnail($resource, 'medium', ['class' => 'w-100 rounded-0 border border-2 border-white object-fit-cover', 'alt' => $title]); ?>
                                 </button>
                             </div>

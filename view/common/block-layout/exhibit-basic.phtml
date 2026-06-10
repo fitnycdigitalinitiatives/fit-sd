@@ -1,5 +1,6 @@
 <?php
 $escape = $this->plugin('escapeHtml');
+$blockId = $this->block->id();
 ?>
 <div class="container-fluid py-4 py-sm-5">
     <div class="row justify-content-center pb-4 pb-sm-5 pt-lg-5">
@@ -14,7 +15,7 @@ $escape = $this->plugin('escapeHtml');
                 <div class="row justify-content-center media-wrapper">
                     <div class="col">
                         <div class="media-embeds">
-                            <div class="tab-content" id="mediaTabContent">
+                            <div class="tab-content" id="block-<?php echo $blockId; ?>-mediaTabContent">
                                 <?php $panel_id = 1; ?>
                                 <?php
                                 foreach ($this->attachments as $attachment):
@@ -22,7 +23,7 @@ $escape = $this->plugin('escapeHtml');
                                     $media = $attachment->media() ?: $item->primaryMedia();
                                 ?>
                                     <?php if ($media): ?>
-                                        <div class="tab-pane<?php echo ($panel_id == 1 ? ' show active' : ''); ?> position-relative" id="media-<?php echo $panel_id; ?>"
+                                        <div class="tab-pane<?php echo ($panel_id == 1 ? ' show active' : ''); ?> position-relative" id="block-<?php echo $blockId; ?>-media-<?php echo $panel_id; ?>"
                                             role="tabpanel" aria-label="<?php echo $media->displayTitle(); ?>">
                                             <?php echo $media->render(); ?>
                                             <div class="item-link">
@@ -46,7 +47,7 @@ $escape = $this->plugin('escapeHtml');
                 <div class="row justify-content-center mt-2" id="slider-row">
                     <div class="col">
                         <div class="row position-relative">
-                            <div class="col-auto" id="media-slider-container">
+                            <div class="col-auto media-slider-container" id="block-<?php echo $blockId; ?>-media-slider-container">
                                 <div class="splide position-static">
                                     <div class="splide__track">
                                         <div class="splide__list" role="tablist" aria-label="Media tabs">
@@ -57,10 +58,10 @@ $escape = $this->plugin('escapeHtml');
                                                 $media = $attachment->media() ?: $item->primaryMedia();
                                             ?>
                                                 <?php if ($media): ?>
-                                                    <button class="splide__slide border-0 bg-transparent" id="media-<?php echo $tab_id; ?>-tab" data-target="#media-<?php echo $tab_id; ?>" data-slidenumber="<?php echo $tab_id; ?>" type="button"
-                                                        role="tab" aria-controls="media-<?php echo $tab_id; ?>"
+                                                    <button class="splide__slide border-0 bg-transparent" id="block-<?php echo $blockId; ?>-media-<?php echo $tab_id; ?>-tab" data-target="#block-<?php echo $blockId; ?>-media-<?php echo $tab_id; ?>" data-slidenumber="<?php echo $tab_id; ?>" type="button"
+                                                        role="tab" aria-controls="block-<?php echo $blockId; ?>-media-<?php echo $tab_id; ?>"
                                                         aria-selected="<?php echo ($tab_id == 1 ? 'true' : 'false'); ?>"
-                                                        data-bs-title="<?php echo $item->displayTitle(); ?>" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="splide-tooltip">
+                                                        data-bs-title="<?php echo $escape($item->displayTitle()); ?>" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="splide-tooltip">
                                                         <?php echo $this->thumbnail($media, 'medium', ['class' => 'img-fluid', 'alt' => $item->displayTitle()]); ?>
                                                     </button>
                                                     <?php $tab_id++; ?>

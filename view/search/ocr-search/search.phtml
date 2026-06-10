@@ -3,6 +3,7 @@
 $this->htmlElement('body')->appendAttribute('class', 'full-text-search resource search');
 $escape = $this->plugin('escapeHtml');
 $api = $this->plugin('api');
+$hyperlink = $this->plugin('hyperlink');
 $urlHelper = $this->plugin('url');
 $results = $this->results;
 $totalResults = $this->totalResults;
@@ -82,7 +83,7 @@ if ($item_set_id) {
                                 ?>
                                     <li>
                                         <a class="dropdown-item d-flex justify-content-between align-items-center fw-bold" href="<?php echo $this_url; ?>">
-                                            <?php echo $this_item_set->displayTitle(); ?>
+                                            <?php echo $escape($this_item_set->displayTitle()); ?>
                                             <span class="badge text-bg-light rounded-pill fw-normal ms-2">
                                                 <?php echo $facet['count']; ?>
                                             </span>
@@ -129,7 +130,7 @@ if ($item_set_id) {
                             </div>
                             <div class="card-body">
                                 <p class="grid-item-title">
-                                    <?php echo $item->link($title, null, ['class' => 'text-dark text-decoration-none stretched-link', 'title' => $title]); ?>
+                                    <?php echo $hyperlink($title, $url, ['class' => 'text-dark text-decoration-none stretched-link', 'title' => $title]); ?>
                                 </p>
                                 <?php if ($snippet_text): ?>
                                     <p class="snippet ps-2 border-start border-secondary-subtle border-5 mt-3 mb-0">

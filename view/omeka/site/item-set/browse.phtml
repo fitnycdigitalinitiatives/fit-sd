@@ -4,6 +4,8 @@ use OmekaTheme\Helper\CollectionIconHelper;
 
 $translate = $this->plugin('translate');
 $escape = $this->plugin('escapeHtml');
+$hyperlink = $this->plugin('hyperlink');
+$api = $this->plugin('api');
 
 $filterLocale = (bool) $this->siteSetting('filter_locale_values');
 $lang = $this->lang();
@@ -62,7 +64,7 @@ $siteSlug = $site->slug();
           if (!$user && $restricted) {
             $count = "Restricted access";
           } else {
-            $count = $this->api()->search('items', ['item_set_id' => $itemSet->id(), 'site_id' => $siteID, 'limit' => 0])->getTotalResults() . " items";
+            $count = $api->search('items', ['item_set_id' => $itemSet->id(), 'site_id' => $siteID, 'limit' => 0])->getTotalResults() . " items";
           }
         }
       ?>
@@ -73,9 +75,7 @@ $siteSlug = $site->slug();
             </div>
             <div class="card-body">
               <p class="grid-item-title">
-                <a href="<?php echo $url; ?>" class="text-dark text-decoration-none stretched-link" title="<?php echo $title; ?>">
-                  <?php echo $title; ?>
-                </a>
+                <?php echo $hyperlink($title, $url, ['class' => 'text-dark text-decoration-none stretched-link', 'title' => $title]); ?>
               </p>
               <div class="item-count collection-types">
                 <span class="fst-italic">

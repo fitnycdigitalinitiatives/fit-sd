@@ -177,7 +177,7 @@ if (isset($response)):
             <?php endif; ?>
             <div class="col mt-4 text-center">
               <?php if ($findingAid): ?>
-                <a class="btn btn-outline-dark rounded-0 border-2 mx-1 my-sm-0" href="<?php echo $findingAid; ?>" target="_blank">View Finding Aid</a>
+                <?php echo $this->hyperlink('View Finding Aid', $findingAid, ['class' => 'btn btn-outline-dark rounded-0 border-2 mx-1 my-sm-0', 'target' => '_blank']); ?>
               <?php endif; ?>
               <button type="button" class="btn btn-outline-dark rounded-0 border-2 mx-1 mt-3 mt-sm-0 my-sm-0" data-bs-toggle="modal" data-bs-target="#collectionSearchModal">Search this Collection</button>
               <!-- Modal -->
@@ -190,7 +190,7 @@ if (isset($response)):
                       </h2>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body" data-loaded="notloaded" data-collectionid="<?php echo $itemSet->id(); ?>" data-collectiontitle="<?php echo $collectionTitle; ?>">
+                    <div class="modal-body" data-loaded="notloaded" data-collectionid="<?php echo $itemSet->id(); ?>" data-collectiontitle="<?php echo $escape($collectionTitle); ?>">
                       <div class="placeholder-glow">
                         <a class="btn btn-secondary disabled placeholder col-12" aria-disabled="true"></a>
                       </div>

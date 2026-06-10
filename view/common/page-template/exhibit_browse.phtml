@@ -75,9 +75,7 @@ $totalResults = count($exhibits);
                             </div>
                             <div class="card-body">
                                 <p class="grid-item-title">
-                                    <a href="<?php echo $exhibitURL; ?>" class="text-dark text-decoration-none stretched-link" title="<?php echo $title; ?>">
-                                        <?php echo $title; ?>
-                                    </a>
+                                    <?php echo $this->hyperlink($title, $exhibitURL, ['class' => 'text-dark text-decoration-none stretched-link', 'title' => $title]); ?>
                                 </p>
                             </div>
                         </div>
