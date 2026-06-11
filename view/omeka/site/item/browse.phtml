@@ -33,7 +33,7 @@ $sortHeadings = [];
         <?php if ($values = $itemSet->value('dcterms:relation', ['all' => true, 'type' => 'uri'])): ?>
           <?php foreach ($values as $value): ?>
             <?php if (str_contains(trim(strtolower($value->value())), "finding aid")): ?>
-              <a class="btn btn-outline-dark rounded-0 border-2 mx-1" href="<?php echo $value->uri(); ?>" target="_blank">View Finding Aid</a>
+              <a class="btn btn-outline-dark rounded-0 border-2 mx-1" href="<?php echo $value->uri(); ?>">View Finding Aid</a>
               <?php break; ?>
             <?php endif; ?>
           <?php endforeach; ?>

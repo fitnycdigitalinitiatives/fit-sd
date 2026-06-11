@@ -116,8 +116,7 @@ $lang = $this->lang();
                   At the request of the author/creator, this work is not currently available for public access. If you would
                   like more details about the access conditions for this item, or if you are a member of the FIT community
                   seeking access to this item, please send us a message at <a
-                    href="mailto:repository@fitnyc.edu?subject=<?php echo urlencode($mailSubject); ?>"
-                    target="_blank">repository@fitnyc.edu</a>.
+                    href="mailto:repository@fitnyc.edu?subject=<?php echo urlencode($mailSubject); ?>">repository@fitnyc.edu</a>.
                 </div>
               </div>
             </div>
@@ -151,8 +150,7 @@ $lang = $this->lang();
             At the request of the author/creator, this work is not currently available for public access. If you would like
             more details about the access conditions for this item, or if you are a member of the FIT community seeking
             access to this item, please send us a message at <a
-              href="mailto:repository@fitnyc.edu?subject=<?php echo urlencode($mailSubject); ?>"
-              target="_blank">repository@fitnyc.edu</a>.
+              href="mailto:repository@fitnyc.edu?subject=<?php echo urlencode($mailSubject); ?>">repository@fitnyc.edu</a>.
           </p>
         <?php endif; ?>
       <?php endif; ?>
@@ -178,7 +176,7 @@ $lang = $this->lang();
             if (!$thisLink) {
               $url = $thisResource->siteUrl(reset($sites)->slug());
               $title = $thisResource->displayTitle();
-              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title, 'target' => '_blank']) . '</div>';
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title]) . '</div>';
             }
             if ($thisLink) {
               $relatedItemsLinks[] = $thisLink;
@@ -202,7 +200,7 @@ $lang = $this->lang();
             if (!$thisLink) {
               $url = $thisResource->siteUrl(reset($sites)->slug());
               $title = $thisResource->displayTitle();
-              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title, 'target' => '_blank']) . '</div>';
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title]) . '</div>';
             }
             if ($thisLink) {
               $relatedItemsLinks[] = $thisLink;
@@ -226,7 +224,7 @@ $lang = $this->lang();
             if (!$thisLink) {
               $url = $thisResource->siteUrl(reset($sites)->slug());
               $title = $thisResource->displayTitle();
-              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title, 'target' => '_blank']) . '</div>';
+              $thisLink = '<div class="resource-link">' . $this->thumbnail($thisResource, 'medium', ['alt' => $title]) . $hyperlink($title, $url, ['class' => 'resource-name stretched-link text-dark text-decoration-none', 'title' => $title]) . '</div>';
             }
             if ($thisLink) {
               $relatedItemsLinks[] = $thisLink;
@@ -298,7 +296,7 @@ $lang = $this->lang();
                     <?php foreach ($values as $value): ?>
                       <?php if (str_contains(trim(strtolower($value->value())), "finding aid")): ?>
                         <div class="col-auto">
-                          <a class="link-dark text-decoration-none z-3 position-relative" href="<?php echo $value->uri(); ?>" target="_blank">
+                          <a class="link-dark text-decoration-none z-3 position-relative" href="<?php echo $value->uri(); ?>">
                             Finding Aid
                             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="bi bi-box-arrow-up-right ms-1" viewBox="0 0 16 16">
                               <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5" />
