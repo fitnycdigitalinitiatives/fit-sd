@@ -1,6 +1,7 @@
 <?php
 // echo json_encode($this->results);
 $this->htmlElement('body')->appendAttribute('class', 'full-text-search resource search');
+$this->pageTitle('Items');
 $escape = $this->plugin('escapeHtml');
 $api = $this->plugin('api');
 $hyperlink = $this->plugin('hyperlink');
@@ -26,14 +27,15 @@ if ($item_set_id) {
     <div class="row">
         <div class="col">
             <div class="row" id="results">
-                <div class="col-auto fw-bold fst-italic h2">
+                <h1 class="h2 mb-0">Items</h1>
+                <p class="col-auto text-secondary fs-5 mb-0">
                     Showing
                     <?php
                     echo number_format($totalResults);
-                    echo ($totalResults == 1) ? ' item' : ' items';
+                    echo ($totalResults == 1) ? ' result' : ' results';
                     echo ($q) ? ' for ' : ' total';
                     ?>
-                </div>
+                </p>
             </div>
             <?php if ($queryString = $this->ocrSearchQueryToString($q, $current_item_set)): ?>
                 <div class="row mt-sm-2 mt-md-1">
